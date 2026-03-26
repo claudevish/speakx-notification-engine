@@ -3,10 +3,10 @@
 from pathlib import Path
 from typing import Optional
 
+import jinja2
 import structlog
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -27,7 +27,17 @@ from app.models.user import UserJourneyState
 logger = structlog.get_logger()
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
-templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
+_jinja_env = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(str(TEMPLATE_DIR)),
+    autoescape=True,
+)
+
+
+def _render(template_name: str, context: dict) -> HTMLResponse:
+    """Render a Jinja2 template and return an HTMLResponse."""
+    template = _jinja_env.get_template(template_name)
+    html = template.render(**context)
+    return HTMLResponse(content=html)
 
 portal_router = APIRouter(prefix="/portal", tags=["portal"])
 
@@ -117,7 +127,7 @@ async def dashboard_page(
     }
     active_users = sum(v for k, v in state_counts.items() if k in active_states)
 
-    return templates.TemplateResponse("dashboard.html", {
+    return _render("dashboard.html", {
         "request": request,
         "page": "dashboard",
         "journey": selected_journey,
@@ -140,7 +150,7 @@ async def upload_page(
 ) -> HTMLResponse:
     _check_portal()
     journeys = await _get_all_journeys(db)
-    return templates.TemplateResponse("upload.html", {
+    return _render("upload.html", {
         "request": request,
         "page": "upload",
         "journeys": journeys,
@@ -198,7 +208,7 @@ async def journey_explorer_page(
 
     all_journeys = await _get_all_journeys(db)
 
-    return templates.TemplateResponse("journey_explorer.html", {
+    return _render("journey_explorer.html", {
         "request": request,
         "page": "journey",
         "journey": journey,
@@ -268,7 +278,7 @@ async def segmentation_page(
     for slot_num, themes in engine.SLOT_THEME_PREFERENCES.items():
         slot_prefs[slot_num] = [t.value for t in themes]
 
-    return templates.TemplateResponse("segmentation.html", {
+    return _render("segmentation.html", {
         "request": request,
         "page": "segmentation",
         "journeys": all_journeys,
@@ -288,7 +298,7 @@ async def notifications_page(
     _check_portal()
     all_journeys = await _get_all_journeys(db)
 
-    return templates.TemplateResponse("notifications.html", {
+    return _render("notifications.html", {
         "request": request,
         "page": "notifications",
         "journeys": all_journeys,
@@ -298,7 +308,7 @@ async def notifications_page(
 @portal_router.get("/config", response_class=HTMLResponse)
 async def config_page(request: Request) -> HTMLResponse:
     _check_portal()
-    return templates.TemplateResponse("config.html", {
+    return _render("config.html", {
         "request": request,
         "page": "config",
     })
