@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SpeakX Notifications{% endblock %}</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            zinc: {
+              50: '#fafafa',
+              100: '#f4f4f5',
+              200: '#e4e4e7',
+              300: '#d4d4d8',
+              400: '#a1a1aa',
+              500: '#71717a',
+              600: '#52525b',
+              700: '#3f3f46',
+              800: '#27272a',
+              900: '#18181b',
+              950: '#09090b',
+            },
+            violet: {
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Portal CSS -->
+  <link rel="stylesheet" href="/static/css/portal.css">
+
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex font-sans antialiased">
+
+  <!-- Fixed Left Sidebar -->
+  <aside class="w-60 bg-zinc-950 border-r border-zinc-800 fixed h-screen flex flex-col z-30">
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-zinc-800">
+      <svg class="w-7 h-7 text-violet-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 2a6 6 0 0 1 6 6v2.586l1.707 1.707A1 1 0 0 1 17 14H3a1 1 0 0 1-.707-1.707L4 10.586V8a6 6 0 0 1 6-6zm-2 14a2 2 0 1 0 4 0H8z"/>
+      </svg>
+      <span class="text-lg font-bold text-white tracking-tight">SpeakX Notifications</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
+      <!-- Dashboard -->
+      <a href="/portal/"
+         class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium sidebar-link rounded-r-lg
+                {% if page == 'dashboard' %}bg-violet-500/10 text-violet-400 border-l-2 border-violet-500{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border-l-2 border-transparent{% endif %}">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="2" width="7" height="7" rx="1.5"/>
+          <rect x="11" y="2" width="7" height="7" rx="1.5"/>
+          <rect x="2" y="11" width="7" height="7" rx="1.5"/>
+          <rect x="11" y="11" width="7" height="7" rx="1.5"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <!-- Upload -->
+      <a href="/portal/upload"
+         class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium sidebar-link rounded-r-lg
+                {% if page == 'upload' %}bg-violet-500/10 text-violet-400 border-l-2 border-violet-500{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border-l-2 border-transparent{% endif %}">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10 13V3m0 0L6 7m4-4l4 4"/>
+          <path d="M3 14v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/>
+        </svg>
+        <span>Upload</span>
+      </a>
+
+      <!-- Journey -->
+      <a href="/portal/journey"
+         class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium sidebar-link rounded-r-lg
+                {% if page == 'journey' %}bg-violet-500/10 text-violet-400 border-l-2 border-violet-500{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border-l-2 border-transparent{% endif %}">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 5l4-2 6 3 4-2v12l-4 2-6-3-4 2V5z"/>
+          <path d="M7 3v12m6-9v12"/>
+        </svg>
+        <span>Journey</span>
+      </a>
+
+      <!-- Segmentation -->
+      <a href="/portal/segmentation"
+         class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium sidebar-link rounded-r-lg
+                {% if page == 'segmentation' %}bg-violet-500/10 text-violet-400 border-l-2 border-violet-500{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border-l-2 border-transparent{% endif %}">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="14" height="4" rx="1"/>
+          <rect x="3" y="9" width="14" height="4" rx="1"/>
+          <rect x="3" y="15" width="14" height="4" rx="1" stroke-dasharray="2 2"/>
+        </svg>
+        <span>Segmentation</span>
+      </a>
+
+      <!-- Notifications -->
+      <a href="/portal/notifications"
+         class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium sidebar-link rounded-r-lg
+                {% if page == 'notifications' %}bg-violet-500/10 text-violet-400 border-l-2 border-violet-500{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border-l-2 border-transparent{% endif %}">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10 2a5 5 0 0 1 5 5v3l2 2H3l2-2V7a5 5 0 0 1 5-5z"/>
+          <path d="M8 15a2 2 0 1 0 4 0"/>
+        </svg>
+        <span>Notifications</span>
+      </a>
+
+      <!-- Send History -->
+      <a href="/portal/send-history"
+         class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium sidebar-link rounded-r-lg
+                {% if page == 'send_history' %}bg-violet-500/10 text-violet-400 border-l-2 border-violet-500{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border-l-2 border-transparent{% endif %}">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 4l4 4-4 4"/>
+          <path d="M10 8h7"/>
+          <path d="M10 12h5"/>
+          <path d="M10 16h3"/>
+        </svg>
+        <span>Send History</span>
+      </a>
+
+      <!-- Config -->
+      <a href="/portal/config"
+         class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium sidebar-link rounded-r-lg
+                {% if page == 'config' %}bg-violet-500/10 text-violet-400 border-l-2 border-violet-500{% else %}text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border-l-2 border-transparent{% endif %}">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="10" cy="10" r="3"/>
+          <path d="M10 1v3m0 12v3M1 10h3m12 0h3M3.5 3.5l2 2m9 9l2 2M16.5 3.5l-2 2m-9 9l-2 2"/>
+        </svg>
+        <span>Config</span>
+      </a>
+    </nav>
+
+    <!-- Bottom -->
+    <div class="border-t border-zinc-800 px-4 py-3 space-y-2">
+      <div class="flex items-center gap-3 text-xs text-zinc-600">
+        <a href="http://localhost:5555" target="_blank" rel="noopener"
+           class="hover:text-zinc-400 transition-colors">Flower</a>
+        <span>&middot;</span>
+        <a href="http://localhost:3000" target="_blank" rel="noopener"
+           class="hover:text-zinc-400 transition-colors">Metabase</a>
+      </div>
+      <p class="text-xs text-zinc-700">v1.0.0</p>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="ml-60 flex-1 flex flex-col min-h-screen">
+    <!-- Top Bar -->
+    <header class="h-14 bg-zinc-900/50 backdrop-blur border-b border-zinc-800 flex items-center px-6 sticky top-0 z-20">
+      <div class="flex-1">
+        <h1 class="text-lg font-semibold text-zinc-100">{% block page_title %}{% endblock %}</h1>
+      </div>
+      <!-- Journey Selector -->
+      {% if journeys is defined and journeys %}
+      <div class="mr-4" x-data="{ open: false }" @click.away="open = false">
+        <button @click="open = !open"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-colors text-sm">
+          <svg class="w-4 h-4 text-violet-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 5l4-2 6 3 4-2v12l-4 2-6-3-4 2V5z"/>
+          </svg>
+          <span class="text-zinc-200 max-w-[180px] truncate">
+            {% if selected_journey_id is defined and selected_journey_id %}
+              {% for j in journeys %}
+                {% if j.id|string == selected_journey_id %}{{ j.name }}{% endif %}
+              {% endfor %}
+            {% else %}
+              Select Journey
+            {% endif %}
+          </span>
+          <svg class="w-3.5 h-3.5 text-zinc-500 transition-transform" :class="{ 'rotate-180': open }" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z"/>
+          </svg>
+        </button>
+        <div x-show="open" x-transition
+             class="absolute right-6 mt-1 w-72 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl overflow-hidden z-50">
+          {% for j in journeys %}
+          <a href="?journey_id={{ j.id }}"
+             class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-700/50 transition-colors
+                    {% if selected_journey_id is defined and j.id|string == selected_journey_id %}bg-violet-500/10{% endif %}">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-zinc-200 truncate">{{ j.name }}</p>
+              <p class="text-xs text-zinc-500">{{ j.total_chapters }} chapters</p>
+            </div>
+            {% if selected_journey_id is defined and j.id|string == selected_journey_id %}
+            <svg class="w-4 h-4 text-violet-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143z"/>
+            </svg>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="flex items-center gap-2 text-sm text-zinc-400">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-pulse-dot absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+        </span>
+        <span>System Online</span>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-6 overflow-y-auto">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Portal JS -->
+  <script src="/static/js/portal.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

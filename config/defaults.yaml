@@ -1,0 +1,105 @@
+dormancy:
+  short_threshold_days:
+    value: 2
+    description: "Days of inactivity before transitioning to dormant_short"
+    category: dormancy
+  long_threshold_days:
+    value: 7
+    description: "Days of inactivity before transitioning to dormant_long"
+    category: dormancy
+  churned_threshold_days:
+    value: 30
+    description: "Days of inactivity before transitioning to churned"
+    category: dormancy
+
+frequency:
+  max_per_day:
+    value: 6
+    description: "Maximum notifications per user per day"
+    category: frequency
+  suppress_if_active_minutes:
+    value: 120
+    description: "Suppress notification if user was active within this many minutes"
+    category: frequency
+
+timing:
+  morning_window:
+    value: {"start": "07:00", "end": "09:00"}
+    description: "Morning notification window (IST)"
+    category: timing
+  midday_window:
+    value: {"start": "11:30", "end": "13:00"}
+    description: "Midday notification window (IST)"
+    category: timing
+  afternoon_window:
+    value: {"start": "15:00", "end": "16:30"}
+    description: "Afternoon notification window (IST)"
+    category: timing
+  evening_window:
+    value: {"start": "18:00", "end": "20:00"}
+    description: "Evening notification window (IST)"
+    category: timing
+  night_window:
+    value: {"start": "20:30", "end": "22:00"}
+    description: "Night notification window (IST)"
+    category: timing
+
+behavioral:
+  struggling_retry_rate_threshold:
+    value: 0.5
+    description: "Retry rate threshold for struggling detection (retries / 5 tasks)"
+    category: behavioral
+  struggling_avg_score_threshold:
+    value: 60
+    description: "Average score threshold below which user is struggling"
+    category: behavioral
+  bored_speed_threshold_pct:
+    value: 0.3
+    description: "If speed < this pct of expected, user may be bored/skimming"
+    category: behavioral
+  bored_completion_rate_threshold:
+    value: 0.9
+    description: "Completion rate above which fast speed indicates boredom"
+    category: behavioral
+  chapter_transition_inactivity_hours:
+    value: 24
+    description: "Hours after chapter completion with no next-chapter activity to trigger chapter_transition"
+    category: behavioral
+  onboarding_completion_threshold:
+    value: 3
+    description: "Activities completed to transition from onboarding to progressing_active"
+    category: behavioral
+  near_completion_progress_pct:
+    value: 70
+    description: "Chapter progress percentage to trigger completing state in final chapter"
+    category: behavioral
+
+llm:
+  provider:
+    value: "claude"
+    description: "LLM provider name"
+    category: llm
+  model:
+    value: "claude-sonnet-4-6-20250514"
+    description: "LLM model identifier"
+    category: llm
+  max_retries:
+    value: 3
+    description: "Maximum retries for LLM API calls"
+    category: llm
+  temperature:
+    value: 0.7
+    description: "LLM temperature for notification generation"
+    category: llm
+
+shadow:
+  enabled:
+    value: true
+    description: "Shadow mode enabled — notifications logged but not delivered"
+    category: shadow
+
+attribution:
+  window_hours:
+    value: 4
+    description: "Hours after notification delivery to attribute user actions"
+    category: attribution

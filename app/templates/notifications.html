@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - SpeakX Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div x-data="notificationsManager()" x-init="loadNotifications(); loadStats()">
+
+  <!-- Section 1: Stats Bar -->
+  <div class="flex flex-wrap items-center gap-3 mb-6">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 flex items-center gap-2">
+      <span class="text-sm text-zinc-400">Total</span>
+      <span class="text-white font-bold tabular-nums" x-text="stats.total ?? '...'"></span>
+    </div>
+    <div class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-4 py-2 flex items-center gap-2">
+      <span class="text-sm text-violet-400">LLM Generated</span>
+      <span class="text-violet-300 font-bold tabular-nums" x-text="stats.by_method?.llm_generated ?? '...'"></span>
+    </div>
+    <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2 flex items-center gap-2">
+      <span class="text-sm text-amber-400">Fallback</span>
+      <span class="text-amber-300 font-bold tabular-nums" x-text="stats.by_method?.fallback_template ?? '...'"></span>
+    </div>
+    <div class="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 flex items-center gap-2">
+      <span class="text-sm text-zinc-400">Shadow Mode</span>
+      <span class="text-zinc-300 font-bold tabular-nums" x-text="stats.by_mode?.shadow ?? '...'"></span>
+    </div>
+
+    <!-- View toggle -->
+    <div class="ml-auto flex items-center gap-1 bg-zinc-800 rounded-lg p-0.5">
+      <button @click="viewMode = 'cards'"
+              :class="viewMode === 'cards' ? 'bg-zinc-700 text-zinc-200' : 'text-zinc-500 hover:text-zinc-300'"
+              class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors">
+        Cards
+      </button>
+      <button @click="viewMode = 'gallery'"
+              :class="viewMode === 'gallery' ? 'bg-zinc-700 text-zinc-200' : 'text-zinc-500 hover:text-zinc-300'"
+              class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors">
+        Gallery
+      </button>
+    </div>
+  </div>
+
+  <!-- Section 2: Filter Bar -->
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+    <!-- Journey -->
+    <select x-model="filters.journey_id" @change="page=1; loadNotifications(); loadStats()"
+      class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 transition-colors">
+      <option value="">All Journeys</option>
+      {% for j in journeys %}
+      <option value="{{ j.id }}">{{ j.name }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- State -->
+    <select x-model="filters.state" @change="page=1; loadNotifications()"
+      class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 transition-colors">
+      <option value="">All States</option>
+      <option value="new_unstarted">new_unstarted</option>
+      <option value="onboarding">onboarding</option>
+      <option value="progressing_active">progressing_active</option>
+      <option value="progressing_slow">progressing_slow</option>
+      <option value="struggling">struggling</option>
+      <option value="bored_skimming">bored_skimming</option>
+      <option value="chapter_transition">chapter_transition</option>
+      <option value="dormant_short">dormant_short</option>
+      <option value="dormant_long">dormant_long</option>
+      <option value="churned">churned</option>
+      <option value="completing">completing</option>
+      <option value="completed">completed</option>
+    </select>
+
+    <!-- Theme -->
+    <select x-model="filters.theme" @change="page=1; loadNotifications()"
+      class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 transition-colors">
+      <option value="">All Themes</option>
+      <option value="fomo">fomo</option>
+      <option value="click_bait">click_bait</option>
+      <option value="motivational">motivational</option>
+      <option value="appreciation">appreciation</option>
+      <option value="story_teaser">story_teaser</option>
+      <option value="relationship">relationship</option>
+      <option value="challenge">challenge</option>
+      <option value="quiz">quiz</option>
+      <option value="milestone">milestone</option>
+      <option value="streak">streak</option>
+      <option value="wotd">wotd</option>
+      <option value="tip">tip</option>
+      <option value="recap">recap</option>
+      <option value="social_proof">social_proof</option>
+      <option value="humor">humor</option>
+    </select>
+
+    <!-- Mode -->
+    <select x-model="filters.mode" @change="page=1; loadNotifications()"
+      class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 transition-colors">
+      <option value="">All Modes</option>
+      <option value="shadow">shadow</option>
+      <option value="live">live</option>
+    </select>
+
+    <!-- Method -->
+    <select x-model="filters.method" @change="page=1; loadNotifications()"
+      class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 transition-colors">
+      <option value="">All Methods</option>
+      <option value="llm_generated">llm_generated</option>
+      <option value="fallback_template">fallback_template</option>
+    </select>
+
+    <!-- Search -->
+    <input type="text" placeholder="Search title or body..." x-model="filters.search"
+      @input.debounce.500ms="page=1; loadNotifications()"
+      class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors w-64">
+  </div>
+
+  <!-- Loading state -->
+  <template x-if="loading">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+      <template x-for="i in 6" :key="i">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 animate-pulse">
+          <div class="flex gap-2 mb-3">
+            <div class="h-5 w-16 bg-zinc-800 rounded-full"></div>
+            <div class="h-5 w-14 bg-zinc-800 rounded-full"></div>
+          </div>
+          <div class="h-5 w-3/4 bg-zinc-800 rounded mt-3"></div>
+          <div class="h-4 w-full bg-zinc-800 rounded mt-2"></div>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <!-- Empty state -->
+  <template x-if="!loading && notifications.length === 0">
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <svg class="w-12 h-12 text-zinc-700 mb-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M10 2a5 5 0 0 1 5 5v3l2 2H3l2-2V7a5 5 0 0 1 5-5z"/>
+        <path d="M8 15a2 2 0 1 0 4 0"/>
+      </svg>
+      <p class="text-zinc-500 text-sm">No notifications found</p>
+      <p class="text-zinc-600 text-xs mt-1">Try adjusting your filters</p>
+    </div>
+  </template>
+
+  <!-- Cards View -->
+  <template x-if="!loading && notifications.length > 0 && viewMode === 'cards'">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+      <template x-for="n in notifications" :key="n.id">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 cursor-pointer hover:border-zinc-700 transition-colors"
+             @click="selectedNotification = n">
+          <!-- Top row: badges -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="themeColor(n.theme)" x-text="n.theme"></span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="n.mode === 'shadow' ? 'bg-zinc-700/50 text-zinc-400' : 'bg-emerald-500/10 text-emerald-400'"
+                  x-text="n.mode"></span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="{
+                    'bg-amber-500/10 text-amber-400': n.delivery_status === 'pending',
+                    'bg-emerald-500/10 text-emerald-400': n.delivery_status === 'sent',
+                    'bg-red-500/10 text-red-400': n.delivery_status === 'failed',
+                    'bg-zinc-600/50 text-zinc-400': n.delivery_status === 'skipped_dnd',
+                  }"
+                  x-text="n.delivery_status"></span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="n.method === 'llm_generated' ? 'bg-violet-500/10 text-violet-400' : 'bg-amber-500/10 text-amber-400'"
+                  x-text="n.method === 'llm_generated' ? 'LLM' : 'Fallback'"></span>
+          </div>
+
+          <!-- Image preview (if available) -->
+          <template x-if="n.image_url">
+            <div class="mt-3 rounded-lg overflow-hidden border border-zinc-800">
+              <img :src="n.image_url" :alt="n.title" class="w-full h-auto" loading="lazy">
+            </div>
+          </template>
+
+          <!-- Title -->
+          <p class="text-lg font-semibold text-white mt-3" x-text="n.title"></p>
+
+          <!-- Body -->
+          <p class="text-sm text-zinc-400 mt-1" x-text="n.body"></p>
+
+          <!-- CTA -->
+          <template x-if="n.cta">
+            <p class="text-sm text-violet-400 mt-2">CTA: <span x-text="n.cta"></span></p>
+          </template>
+
+          <!-- Footer row -->
+          <div class="flex flex-wrap items-center gap-3 mt-4 text-xs">
+            <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400" x-text="n.state"></span>
+            <span class="text-zinc-600" x-text="Portal.truncate(n.user_id, 12)"></span>
+            <span class="text-zinc-600 ml-auto" x-text="Portal.formatDate(n.created_at)"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <!-- Gallery View -->
+  <template x-if="!loading && notifications.length > 0 && viewMode === 'gallery'">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
+      <template x-for="n in notifications" :key="n.id">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden cursor-pointer hover:border-zinc-700 transition-colors"
+             @click="selectedNotification = n">
+          <!-- Image -->
+          <template x-if="n.image_url">
+            <img :src="n.image_url" :alt="n.title" class="w-full h-auto" loading="lazy">
+          </template>
+          <template x-if="!n.image_url">
+            <div class="w-full h-32 bg-zinc-800 flex items-center justify-center">
+              <span class="text-xs text-zinc-600">No preview</span>
+            </div>
+          </template>
+          <!-- Caption -->
+          <div class="p-3">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                    :class="themeColor(n.theme)" x-text="n.theme"></span>
+              <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 text-xs" x-text="n.state"></span>
+            </div>
+            <p class="text-sm font-medium text-zinc-200 truncate" x-text="n.title"></p>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <!-- Pagination -->
+  <div class="flex justify-between items-center mt-6" x-show="total > 0">
+    <p class="text-sm text-zinc-500">
+      Showing <span class="text-zinc-300 font-medium" x-text="notifications.length"></span>
+      of <span class="text-zinc-300 font-medium" x-text="total"></span>
+    </p>
+    <div class="flex items-center gap-2">
+      <button @click="page--; loadNotifications()" :disabled="page <= 1"
+        class="px-3 py-1.5 text-sm rounded-lg border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        :class="page <= 1 ? 'bg-zinc-900 border-zinc-800 text-zinc-600' : 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700'">
+        Previous
+      </button>
+      <span class="text-sm text-zinc-400 px-2">
+        Page <span class="text-zinc-200" x-text="page"></span> of <span class="text-zinc-200" x-text="pages"></span>
+      </span>
+      <button @click="page++; loadNotifications()" :disabled="page >= pages"
+        class="px-3 py-1.5 text-sm rounded-lg border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        :class="page >= pages ? 'bg-zinc-900 border-zinc-800 text-zinc-600' : 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700'">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div x-show="selectedNotification" x-transition class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+       @click.self="selectedNotification = null" x-cloak>
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative mx-4 max-h-[90vh] overflow-y-auto">
+      <!-- Close button -->
+      <button @click="selectedNotification = null"
+        class="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors" aria-label="Close modal">
+        <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+
+      <template x-if="selectedNotification">
+        <div>
+          <!-- Image preview (full size in modal) -->
+          <template x-if="selectedNotification.image_url">
+            <div class="mb-5 rounded-xl overflow-hidden border border-zinc-700">
+              <img :src="selectedNotification.image_url" :alt="selectedNotification.title" class="w-full h-auto">
+            </div>
+          </template>
+
+          <!-- Badges -->
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="themeColor(selectedNotification.theme)" x-text="selectedNotification.theme"></span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="selectedNotification.mode === 'shadow' ? 'bg-zinc-700/50 text-zinc-400' : 'bg-emerald-500/10 text-emerald-400'"
+                  x-text="selectedNotification.mode"></span>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  :class="selectedNotification.method === 'llm_generated' ? 'bg-violet-500/10 text-violet-400' : 'bg-amber-500/10 text-amber-400'"
+                  x-text="selectedNotification.method === 'llm_generated' ? 'LLM' : 'Fallback'"></span>
+          </div>
+
+          <!-- Title -->
+          <h2 class="text-xl font-bold text-white" x-text="selectedNotification.title"></h2>
+
+          <!-- Body -->
+          <p class="text-sm text-zinc-400 mt-2 leading-relaxed" x-text="selectedNotification.body"></p>
+
+          <!-- CTA -->
+          <template x-if="selectedNotification.cta">
+            <p class="text-sm text-violet-400 mt-3 font-medium">CTA: <span x-text="selectedNotification.cta"></span></p>
+          </template>
+
+          <!-- Details grid -->
+          <div class="mt-6 space-y-3 border-t border-zinc-800 pt-4">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-zinc-500">State</span>
+              <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs" x-text="selectedNotification.state"></span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-zinc-500">User ID</span>
+              <span class="text-zinc-300 font-mono text-xs" x-text="selectedNotification.user_id"></span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-zinc-500">Created</span>
+              <span class="text-zinc-300 text-xs" x-text="Portal.formatDate(selectedNotification.created_at)"></span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-zinc-500">Delivery Status</span>
+              <span class="text-zinc-300 text-xs" x-text="selectedNotification.delivery_status ?? 'N/A'"></span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-zinc-500">Method</span>
+              <span class="text-zinc-300 text-xs" x-text="selectedNotification.method"></span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-zinc-500">Mode</span>
+              <span class="text-zinc-300 text-xs" x-text="selectedNotification.mode"></span>
+            </div>
+            <template x-if="selectedNotification.scheduled_for">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-zinc-500">Scheduled For</span>
+                <span class="text-zinc-300 text-xs" x-text="Portal.formatDate(selectedNotification.scheduled_for)"></span>
+              </div>
+            </template>
+            <template x-if="selectedNotification.sent_at">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-zinc-500">Sent At</span>
+                <span class="text-emerald-400 text-xs" x-text="Portal.formatDate(selectedNotification.sent_at)"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function notificationsManager() {
+  return {
+    notifications: [],
+    filters: { journey_id: '', state: '', theme: '', mode: '', method: '', search: '' },
+    page: 1,
+    pages: 1,
+    total: 0,
+    stats: {},
+    loading: false,
+    selectedNotification: null,
+    viewMode: 'cards',
+
+    async loadNotifications() {
+      this.loading = true;
+      try {
+        const params = new URLSearchParams();
+        if (this.filters.journey_id) params.set('journey_id', this.filters.journey_id);
+        if (this.filters.state) params.set('state', this.filters.state);
+        if (this.filters.theme) params.set('theme', this.filters.theme);
+        if (this.filters.mode) params.set('mode', this.filters.mode);
+        if (this.filters.method) params.set('method', this.filters.method);
+        if (this.filters.search) params.set('search', this.filters.search);
+        params.set('page', this.page);
+        params.set('limit', 20);
+        const data = await Portal.get(`/notifications?${params}`);
+        this.notifications = data.items;
+        this.total = data.total;
+        this.pages = data.pages;
+      } catch (e) {
+        this.notifications = [];
+        this.total = 0;
+        this.pages = 1;
+      }
+      this.loading = false;
+    },
+
+    async loadStats() {
+      try {
+        const params = new URLSearchParams();
+        if (this.filters.journey_id) params.set('journey_id', this.filters.journey_id);
+        this.stats = await Portal.get(`/notifications/stats?${params}`);
+      } catch (e) {
+        this.stats = {};
+      }
+    },
+
+    themeColor(theme) {
+      const map = {
+        fomo: 'bg-red-500/10 text-red-400',
+        click_bait: 'bg-red-500/10 text-red-400',
+        motivational: 'bg-amber-500/10 text-amber-400',
+        appreciation: 'bg-amber-500/10 text-amber-400',
+        story_teaser: 'bg-violet-500/10 text-violet-400',
+        relationship: 'bg-violet-500/10 text-violet-400',
+        challenge: 'bg-blue-500/10 text-blue-400',
+        quiz: 'bg-blue-500/10 text-blue-400',
+        milestone: 'bg-emerald-500/10 text-emerald-400',
+        streak: 'bg-emerald-500/10 text-emerald-400',
+        wotd: 'bg-cyan-500/10 text-cyan-400',
+        tip: 'bg-cyan-500/10 text-cyan-400',
+        recap: 'bg-zinc-500/10 text-zinc-400',
+        social_proof: 'bg-zinc-500/10 text-zinc-400',
+        humor: 'bg-pink-500/10 text-pink-400',
+      };
+      return map[theme] || 'bg-zinc-500/10 text-zinc-400';
+    },
+  };
+}
+</script>
+{% endblock %}

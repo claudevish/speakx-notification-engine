@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Journey - SpeakX Notifications{% endblock %}
+
+{% block page_title %}Upload Journey{% endblock %}
+
+{% block content %}
+<!-- Section 1: Upload Zone -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-8 animate-fade-in"
+     x-data="uploadManager()" x-cloak>
+
+  <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-5">Upload Journey CSV</h3>
+
+  <!-- Drop Zone -->
+  <div class="border-2 border-dashed border-zinc-700 rounded-xl p-12 text-center transition-colors cursor-pointer"
+       :class="{ 'drop-zone-active': $refs.dropzone?.classList?.contains('dragover') }"
+       x-ref="dropzone"
+       @click="$refs.fileInput.click()"
+       @dragover.prevent="$refs.dropzone.classList.add('dragover')"
+       @dragleave.prevent="$refs.dropzone.classList.remove('dragover')"
+       @drop.prevent="$refs.dropzone.classList.remove('dragover'); handleDrop($event)">
+
+    <input type="file"
+           accept=".csv"
+           class="hidden"
+           x-ref="fileInput"
+           @change="selectFile($event)">
+
+    <!-- Upload Icon -->
+    <div class="flex justify-center mb-4">
+      <svg class="w-12 h-12 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 16V4m0 0L8 8m4-4l4 4"/>
+        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+      </svg>
+    </div>
+
+    <template x-if="!file">
+      <div>
+        <p class="text-zinc-300 font-medium">Drop your Journey CSV here</p>
+        <p class="text-sm text-zinc-500 mt-1">or click to browse</p>
+        <p class="text-xs text-zinc-600 mt-3">Supports .csv files up to 50 MB</p>
+      </div>
+    </template>
+
+    <template x-if="file">
+      <div>
+        <div class="flex items-center justify-center gap-3">
+          <svg class="w-5 h-5 text-violet-400" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M4 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.414A2 2 0 0 0 17.414 6L14 2.586A2 2 0 0 0 12.586 2H4zm8 1.414L15.586 8H13a1 1 0 0 1-1-1V4.414z"/>
+          </svg>
+          <span class="text-zinc-200 font-medium" x-text="file.name"></span>
+          <span class="text-xs text-zinc-500" x-text="formatSize(file.size)"></span>
+        </div>
+        <p class="text-xs text-zinc-500 mt-2">Click or drop a different file to replace</p>
+      </div>
+    </template>
+  </div>
+
+  <!-- Upload Button -->
+  <div class="flex items-center gap-4 mt-5">
+    <button @click="upload()"
+            :disabled="!file || uploading"
+            class="bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors">
+      <span x-show="!uploading">Upload &amp; Ingest</span>
+      <span x-show="uploading" class="flex items-center gap-2">
+        <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"/>
+          <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" class="opacity-75"/>
+        </svg>
+        Uploading...
+      </span>
+    </button>
+
+    <template x-if="error">
+      <p class="text-sm text-red-400" x-text="error"></p>
+    </template>
+  </div>
+
+  <!-- Progress Display -->
+  <template x-if="taskId">
+    <div class="mt-6 border-t border-zinc-800 pt-5">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-sm text-zinc-400">Task:</span>
+        <code class="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded font-mono" x-text="taskId"></code>
+      </div>
+
+      <!-- Status Badge -->
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-sm text-zinc-400">Status:</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+              :class="{
+                'bg-yellow-500/15 text-yellow-400': status === 'PENDING',
+                'bg-blue-500/15 text-blue-400': status === 'STARTED',
+                'bg-emerald-500/15 text-emerald-400': status === 'SUCCESS',
+                'bg-red-500/15 text-red-400': status === 'FAILURE',
+              }"
+              x-text="status">
+        </span>
+      </div>
+
+      <!-- Polling indicator -->
+      <template x-if="status === 'PENDING' || status === 'STARTED'">
+        <div class="flex items-center gap-2 text-sm text-zinc-500">
+          <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"/>
+            <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" class="opacity-75"/>
+          </svg>
+          Processing... polling for updates
+        </div>
+      </template>
+
+      <!-- Result -->
+      <template x-if="result">
+        <div class="bg-zinc-800/50 border border-zinc-700 rounded-lg p-4 mt-3">
+          <h4 class="text-sm font-medium text-emerald-400 mb-3">Ingestion Complete</h4>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p class="text-zinc-500 text-xs uppercase tracking-wider">Journey ID</p>
+              <p class="text-zinc-200 font-medium mt-1" x-text="result.journey_id"></p>
+            </div>
+            <div>
+              <p class="text-zinc-500 text-xs uppercase tracking-wider">Total Rows</p>
+              <p class="text-zinc-200 font-medium mt-1" x-text="result.total_rows"></p>
+            </div>
+            <div>
+              <p class="text-zinc-500 text-xs uppercase tracking-wider">Chapters Analyzed</p>
+              <p class="text-zinc-200 font-medium mt-1" x-text="result.chapters_analyzed"></p>
+            </div>
+            <div>
+              <p class="text-zinc-500 text-xs uppercase tracking-wider">Errors</p>
+              <p class="font-medium mt-1" :class="result.errors > 0 ? 'text-red-400' : 'text-zinc-200'" x-text="result.errors"></p>
+            </div>
+          </div>
+          <a :href="'/portal/journey/' + result.journey_id"
+             class="inline-flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium mt-4">
+            View Journey
+            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M7 4l6 6-6 6"/>
+            </svg>
+          </a>
+        </div>
+      </template>
+    </div>
+  </template>
+</div>
+
+<!-- Section 2: Previous Journeys -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 animate-fade-in">
+  <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-5">Previous Journeys</h3>
+
+  {% if journeys and journeys | length > 0 %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-zinc-800">
+          <th class="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Name</th>
+          <th class="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Status</th>
+          <th class="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Chapters</th>
+          <th class="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Created At</th>
+          <th class="text-left py-3 px-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for j in journeys %}
+        <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors"
+            x-data="{ seeding: false, seedResult: null, seedError: null }">
+          <td class="py-3 px-4">
+            <span class="text-zinc-200 font-medium">{{ j.name | default('Unnamed') }}</span>
+          </td>
+          <td class="py-3 px-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+              {% if j.status == 'active' %}bg-emerald-500/15 text-emerald-400
+              {% elif j.status == 'analyzing' %}bg-blue-500/15 text-blue-400
+              {% elif j.status == 'failed' %}bg-red-500/15 text-red-400
+              {% else %}bg-zinc-700/50 text-zinc-400
+              {% endif %}">
+              {{ j.status | default('draft') | title }}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-zinc-400 tabular-nums">
+            {{ j.total_chapters | default(0) }}
+          </td>
+          <td class="py-3 px-4 text-zinc-500 text-xs tabular-nums">
+            {{ j.created_at.strftime('%b %d, %Y %H:%M') if j.created_at else '---' }}
+          </td>
+          <td class="py-3 px-4">
+            <div class="flex items-center gap-3">
+              <a href="/portal/journey/{{ j.id }}"
+                 class="text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium">
+                Explore
+              </a>
+              <button @click="seedDemoData('{{ j.id }}', $data)"
+                      :disabled="seeding"
+                      class="text-sm text-amber-400 hover:text-amber-300 disabled:text-zinc-600 disabled:cursor-not-allowed transition-colors font-medium">
+                <span x-show="!seeding">Seed Demo</span>
+                <span x-show="seeding" class="flex items-center gap-1">
+                  <svg class="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"/>
+                    <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" class="opacity-75"/>
+                  </svg>
+                  Seeding...
+                </span>
+              </button>
+            </div>
+            <!-- Seed result -->
+            <template x-if="seedResult">
+              <p class="text-xs text-emerald-400 mt-1"
+                 x-text="seedResult.users_created + ' users, ' + seedResult.notifications_generated + ' notifications'"></p>
+            </template>
+            <template x-if="seedError">
+              <p class="text-xs text-red-400 mt-1" x-text="seedError"></p>
+            </template>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="flex flex-col items-center justify-center py-10 text-center">
+    <svg class="w-10 h-10 text-zinc-700 mb-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M3 5l4-2 6 3 4-2v12l-4 2-6-3-4 2V5z"/>
+      <path d="M7 3v12m6-9v12"/>
+    </svg>
+    <p class="text-sm text-zinc-500">No journeys ingested yet</p>
+    <p class="text-xs text-zinc-600 mt-1">Upload a CSV file above to get started.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function uploadManager() {
+  return {
+    file: null,
+    uploading: false,
+    taskId: null,
+    status: null,
+    result: null,
+    error: null,
+    pollInterval: null,
+
+    selectFile(event) {
+      this.file = event.target.files[0];
+      this.error = null;
+    },
+
+    handleDrop(event) {
+      this.file = event.dataTransfer.files[0];
+      this.error = null;
+    },
+
+    async upload() {
+      if (!this.file) return;
+      this.uploading = true;
+      this.error = null;
+      this.result = null;
+      this.taskId = null;
+      this.status = null;
+
+      try {
+        const fd = new FormData();
+        fd.append('file', this.file);
+        const res = await Portal.upload('/upload', fd);
+        this.taskId = res.task_id;
+        this.status = 'PENDING';
+        this.startPolling();
+      } catch (e) {
+        this.error = e.message;
+      }
+      this.uploading = false;
+    },
+
+    startPolling() {
+      this.pollInterval = setInterval(async () => {
+        try {
+          const res = await Portal.get(`/upload/status/${this.taskId}`);
+          this.status = res.status;
+          if (res.result) {
+            this.result = res.result;
+            clearInterval(this.pollInterval);
+          }
+          if (res.status === 'FAILURE') {
+            this.error = res.error || 'Ingestion failed';
+            clearInterval(this.pollInterval);
+          }
+        } catch (e) {
+          this.error = e.message;
+          clearInterval(this.pollInterval);
+        }
+      }, 2000);
+    },
+
+    formatSize(bytes) {
+      if (!bytes) return '0 KB';
+      return (bytes / 1024).toFixed(1) + ' KB';
+    },
+  }
+}
+
+async function seedDemoData(journeyId, data) {
+  data.seeding = true;
+  data.seedResult = null;
+  data.seedError = null;
+  try {
+    const res = await fetch(`/portal/api/journey/${journeyId}/seed`, { method: 'POST' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Seed failed: ${res.status}`);
+    }
+    data.seedResult = await res.json();
+  } catch (e) {
+    data.seedError = e.message;
+  }
+  data.seeding = false;
+}
+</script>
+{% endblock %}
