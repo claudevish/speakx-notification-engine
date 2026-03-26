@@ -28,6 +28,8 @@ logger = structlog.get_logger()
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
+templates.env.globals.pop("url_for", None)
+templates.env.cache_size = 0
 
 portal_router = APIRouter(prefix="/portal", tags=["portal"])
 
