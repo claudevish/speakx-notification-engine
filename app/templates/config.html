@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration - SpeakX Notifications{% endblock %}
+{% block page_title %}Configuration{% endblock %}
+
+{% block content %}
+<div x-data="configManager()" x-init="loadConfig()">
+
+  <!-- Section 1: Category Tabs -->
+  <div class="flex gap-2 flex-wrap mb-6">
+    <button @click="activeCategory = 'all'"
+      class="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
+      :class="activeCategory === 'all' ? 'bg-violet-500/10 text-violet-400' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'">
+      All
+    </button>
+    <template x-for="cat in categories" :key="cat">
+      <button @click="activeCategory = cat"
+        class="px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors"
+        :class="activeCategory === cat ? 'bg-violet-500/10 text-violet-400' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'"
+        x-text="cat">
+      </button>
+    </template>
+  </div>
+
+  <!-- Section 2: Config Table -->
+  <div class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mt-4">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-zinc-800">
+            <th class="text-left text-xs uppercase text-zinc-500 font-medium px-4 py-3 tracking-wider">Key</th>
+            <th class="text-left text-xs uppercase text-zinc-500 font-medium px-4 py-3 tracking-wider">Value</th>
+            <th class="text-left text-xs uppercase text-zinc-500 font-medium px-4 py-3 tracking-wider hidden lg:table-cell">Description</th>
+            <th class="text-left text-xs uppercase text-zinc-500 font-medium px-4 py-3 tracking-wider hidden md:table-cell">Category</th>
+            <th class="text-left text-xs uppercase text-zinc-500 font-medium px-4 py-3 tracking-wider hidden xl:table-cell">Updated</th>
+            <th class="text-left text-xs uppercase text-zinc-500 font-medium px-4 py-3 tracking-wider w-20">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="c in filteredConfigs" :key="c.key">
+            <tr class="border-t border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+              <!-- Key -->
+              <td class="px-4 py-3">
+                <span class="font-mono text-sm text-zinc-200" x-text="c.key"></span>
+              </td>
+
+              <!-- Value -->
+              <td class="px-4 py-3">
+                <!-- Display mode -->
+                <template x-if="editingKey !== c.key">
+                  <span class="text-sm text-zinc-300 cursor-pointer hover:text-white transition-colors"
+                        @click="startEdit(c)"
+                        x-text="typeof c.value === 'object' ? JSON.stringify(c.value) : String(c.value)">
+                  </span>
+                </template>
+
+                <!-- Edit mode -->
+                <template x-if="editingKey === c.key">
+                  <div class="flex items-center gap-2">
+                    <input type="text" x-model="editValue"
+                      @keydown.enter="saveEdit(c.key)"
+                      @keydown.escape="cancelEdit()"
+                      class="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-violet-500 transition-colors w-48"
+                      autofocus>
+                    <button @click="saveEdit(c.key)" :disabled="saving"
+                      class="px-2.5 py-1.5 bg-violet-500 hover:bg-violet-600 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50">
+                      Save
+                    </button>
+                    <button @click="cancelEdit()"
+                      class="px-2.5 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs font-medium rounded-lg transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </template>
+              </td>
+
+              <!-- Description -->
+              <td class="px-4 py-3 hidden lg:table-cell">
+                <span class="text-sm text-zinc-400" x-text="c.description || ''"></span>
+              </td>
+
+              <!-- Category -->
+              <td class="px-4 py-3 hidden md:table-cell">
+                <span class="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 text-xs" x-text="c.category || ''"></span>
+              </td>
+
+              <!-- Updated -->
+              <td class="px-4 py-3 hidden xl:table-cell">
+                <span class="text-xs text-zinc-500" x-text="Portal.formatDate(c.updated_at)"></span>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-4 py-3">
+                <button @click="startEdit(c)" class="text-zinc-500 hover:text-violet-400 transition-colors" aria-label="Edit config">
+                  <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-8.793 8.793-3.536.707.707-3.536 8.793-8.793z"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty state -->
+    <template x-if="filteredConfigs.length === 0">
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <svg class="w-10 h-10 text-zinc-700 mb-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="10" cy="10" r="3"/>
+          <path d="M10 1v3m0 12v3M1 10h3m12 0h3M3.5 3.5l2 2m9 9l2 2M16.5 3.5l-2 2m-9 9l-2 2"/>
+        </svg>
+        <p class="text-zinc-500 text-sm">No config entries in this category</p>
+      </div>
+    </template>
+  </div>
+
+  <!-- Section 3: Shadow Mode Toggle -->
+  <div class="mt-8 bg-zinc-900 border border-red-900/50 rounded-xl p-6">
+    <div class="flex items-start justify-between gap-6">
+      <div>
+        <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/>
+            <path d="M10 6v4m0 4h.01"/>
+          </svg>
+          Shadow Mode
+        </h3>
+        <p class="text-sm text-zinc-400 mt-1 max-w-lg">
+          When enabled, notifications are generated but <span class="text-red-400 font-medium">NOT delivered</span> to users.
+          Use this for testing and validation before going live.
+        </p>
+      </div>
+
+      <button @click="toggleShadow()"
+        class="relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+        :class="shadowEnabled ? 'bg-red-500' : 'bg-zinc-600'"
+        role="switch"
+        :aria-checked="shadowEnabled"
+        aria-label="Toggle shadow mode">
+        <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
+              :class="shadowEnabled ? 'translate-x-5' : 'translate-x-0'">
+        </span>
+      </button>
+    </div>
+
+    <div class="mt-4 flex items-center gap-2">
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="absolute inline-flex h-full w-full rounded-full opacity-75 animate-pulse"
+              :class="shadowEnabled ? 'bg-red-400' : 'bg-emerald-400'"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+              :class="shadowEnabled ? 'bg-red-500' : 'bg-emerald-500'"></span>
+      </span>
+      <span class="text-sm font-medium" :class="shadowEnabled ? 'text-red-400' : 'text-emerald-400'"
+            x-text="shadowEnabled ? 'Shadow mode is ACTIVE \u2014 notifications are NOT being delivered' : 'Live mode \u2014 notifications are being delivered'">
+      </span>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function configManager() {
+  return {
+    configs: [],
+    activeCategory: 'all',
+    editingKey: null,
+    editValue: '',
+    saving: false,
+
+    get categories() {
+      return [...new Set(this.configs.map(c => c.category).filter(Boolean))].sort();
+    },
+
+    get filteredConfigs() {
+      if (this.activeCategory === 'all') return this.configs;
+      return this.configs.filter(c => c.category === this.activeCategory);
+    },
+
+    async loadConfig() {
+      try {
+        this.configs = await Portal.get('/config');
+      } catch (e) {
+        this.configs = [];
+      }
+    },
+
+    startEdit(config) {
+      this.editingKey = config.key;
+      this.editValue = typeof config.value === 'object' ? JSON.stringify(config.value) : String(config.value);
+    },
+
+    cancelEdit() {
+      this.editingKey = null;
+      this.editValue = '';
+    },
+
+    async saveEdit(key) {
+      this.saving = true;
+      try {
+        let value = this.editValue;
+        try { value = JSON.parse(value); } catch {}
+        await Portal.put(`/config/${key}`, { value });
+        this.editingKey = null;
+        this.editValue = '';
+        await this.loadConfig();
+      } catch (e) {
+        // Keep edit mode open on error
+      }
+      this.saving = false;
+    },
+
+    get shadowEnabled() {
+      const c = this.configs.find(c => c.key === 'shadow.enabled');
+      return c ? c.value : true;
+    },
+
+    async toggleShadow() {
+      try {
+        await Portal.put('/config/shadow.enabled', { value: !this.shadowEnabled });
+        await this.loadConfig();
+      } catch (e) {
+        // Silently handle error
+      }
+    },
+  };
+}
+</script>
+{% endblock %}

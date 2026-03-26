@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% from "components/stat_card.html" import stat_card %}
+
+{% block title %}Dashboard - SpeakX Notifications{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Section 1: KPI Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  {{ stat_card(
+      title="Total Users",
+      value=total_users | default(0) | string,
+      subtitle="Registered users in system",
+      color="violet"
+  ) }}
+  {{ stat_card(
+      title="Active Users",
+      value=active_users | default(0) | string,
+      subtitle="Users with recent activity",
+      color="emerald"
+  ) }}
+  {{ stat_card(
+      title="Notifications Generated",
+      value=total_notifications | default(0) | string,
+      subtitle="Total notifications created",
+      color="blue"
+  ) }}
+  {{ stat_card(
+      title="LLM Success Rate",
+      value=(((llm_count / total_notifications * 100) | round(1)) | string + "%") if total_notifications | default(0) > 0 else "0%",
+      subtitle="Claude-generated vs fallback",
+      color="amber"
+  ) }}
+</div>
+
+<!-- Section 2: State Distribution -->
+<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-8 animate-fade-in">
+  <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-5">State Distribution</h3>
+
+  {% set state_order = [
+    'new_unstarted', 'onboarding', 'progressing_active', 'progressing_slow',
+    'struggling', 'bored_skimming', 'chapter_transition',
+    'dormant_short', 'dormant_long', 'churned',
+    'completing', 'completed'
+  ] %}
+
+  {% set max_count = state_counts.values() | list | max if state_counts and state_counts.values() | list | length > 0 else 0 %}
+
+  <div class="space-y-3">
+    {% for state in state_order %}
+      {% set count = state_counts.get(state, 0) if state_counts else 0 %}
+      <div class="flex items-center gap-4">
+        <div class="w-40 shrink-0">
+          <span class="text-sm text-zinc-300 font-medium">{{ state | replace('_', ' ') | title }}</span>
+        </div>
+        <div class="flex-1 flex items-center gap-3">
+          <div class="flex-1 h-5 bg-zinc-800 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500
+              {% if state in ['progressing_active', 'onboarding', 'new_unstarted'] %}bg-violet-500
+              {% elif state in ['progressing_slow', 'bored_skimming', 'chapter_transition'] %}bg-amber-500
+              {% elif state in ['dormant_short', 'dormant_long', 'churned'] %}bg-red-500
+              {% elif state in ['completing', 'completed'] %}bg-emerald-500
+              {% elif state == 'struggling' %}bg-orange-500
+              {% else %}bg-zinc-500
+              {% endif %}"
+              style="width: {{ (count / max_count * 100) | round(1) if max_count > 0 else 0 }}%">
+            </div>
+          </div>
+          <span class="text-sm text-zinc-400 tabular-nums w-12 text-right">{{ count }}</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Section 3: Recent Notifications + Journey -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <!-- Recent Notifications (col-span-2) -->
+  <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl p-5 animate-fade-in">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Recent Notifications</h3>
+
+    {% if recent_notifications and recent_notifications | length > 0 %}
+    <div class="space-y-1">
+      {% for notif in recent_notifications[:15] %}
+      <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-zinc-800/50 transition-colors">
+        <!-- Timestamp -->
+        <span class="text-xs text-zinc-600 tabular-nums w-32 shrink-0">
+          {{ notif.created_at.strftime('%b %d, %H:%M') if notif.created_at else '---' }}
+        </span>
+
+        <!-- State Badge -->
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium shrink-0
+          {% if notif.state_at_generation in ['progressing_active', 'onboarding'] %}bg-violet-500/15 text-violet-400
+          {% elif notif.state_at_generation in ['dormant_short', 'dormant_long'] %}bg-red-500/15 text-red-400
+          {% elif notif.state_at_generation == 'churned' %}bg-red-500/15 text-red-400
+          {% elif notif.state_at_generation in ['completing', 'completed'] %}bg-emerald-500/15 text-emerald-400
+          {% elif notif.state_at_generation == 'struggling' %}bg-orange-500/15 text-orange-400
+          {% else %}bg-zinc-700/50 text-zinc-400
+          {% endif %}">
+          {{ notif.state_at_generation | replace('_', ' ') | truncate(18, True, '..') if notif.state_at_generation else 'unknown' }}
+        </span>
+
+        <!-- Theme Badge -->
+        {% if notif.theme %}
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400 shrink-0">
+          {{ notif.theme | truncate(14, True, '..') }}
+        </span>
+        {% endif %}
+
+        <!-- Title -->
+        <span class="text-sm text-zinc-300 truncate">
+          {{ notif.title | default('Untitled notification') | truncate(60, True, '...') }}
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-12 text-center">
+      <svg class="w-10 h-10 text-zinc-700 mb-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M10 2a5 5 0 0 1 5 5v3l2 2H3l2-2V7a5 5 0 0 1 5-5z"/>
+        <path d="M8 15a2 2 0 1 0 4 0"/>
+      </svg>
+      <p class="text-sm text-zinc-500">No notifications generated yet</p>
+      <p class="text-xs text-zinc-600 mt-1">Upload a journey and trigger the notification pipeline to get started.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Journey Card (col-span-1) -->
+  <div class="lg:col-span-1 bg-zinc-900 border border-zinc-800 rounded-xl p-5 animate-fade-in">
+    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-4">Journey</h3>
+
+    {% if journey %}
+    <div class="space-y-4">
+      <div>
+        <p class="text-lg font-semibold text-white">{{ journey.name | default('Unnamed Journey') }}</p>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-2
+          {% if journey.status == 'active' %}bg-emerald-500/15 text-emerald-400
+          {% elif journey.status == 'analyzing' %}bg-blue-500/15 text-blue-400
+          {% elif journey.status == 'failed' %}bg-red-500/15 text-red-400
+          {% else %}bg-zinc-700/50 text-zinc-400
+          {% endif %}">
+          {{ journey.status | default('draft') | title }}
+        </span>
+      </div>
+
+      <!-- Hierarchy Counts -->
+      <div class="space-y-2 pt-2 border-t border-zinc-800">
+        {% set hierarchy = [
+          ('Chapters', hierarchy_counts.get('chapters', 0)),
+          ('Quests', hierarchy_counts.get('quests', 0)),
+          ('Activities', hierarchy_counts.get('activities', 0)),
+          ('Lessons', hierarchy_counts.get('lessons', 0)),
+          ('Tasks', hierarchy_counts.get('tasks', 0)),
+        ] %}
+        {% for label, count in hierarchy %}
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-zinc-400">{{ label }}</span>
+          <span class="text-zinc-200 tabular-nums font-medium">{{ count }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <a href="/portal/journey/{{ journey.id }}"
+         class="inline-flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium mt-2">
+        View Journey
+        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7 4l6 6-6 6"/>
+        </svg>
+      </a>
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-8 text-center">
+      <svg class="w-10 h-10 text-zinc-700 mb-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 5l4-2 6 3 4-2v12l-4 2-6-3-4 2V5z"/>
+        <path d="M7 3v12m6-9v12"/>
+      </svg>
+      <p class="text-sm text-zinc-500">No journey uploaded yet</p>
+      <a href="/portal/upload"
+         class="inline-flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium mt-3">
+        Upload Journey
+        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7 4l6 6-6 6"/>
+        </svg>
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
