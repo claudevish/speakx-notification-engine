@@ -1,8 +1,8 @@
-"""Prompt construction for LLM-powered notification generation.
+"""Prompt construction for bulk notification template generation.
 
-Builds the user-context prompt and the system prompt sent to the LLM, including
-state-specific descriptions, theme modifiers, story context extracted from chapter
-analysis, and few-shot examples loaded from a JSON template file.
+Builds quest-aware prompts for the LLM using the NotifCraft agent system prompt.
+Each prompt generates 8 notification templates for a specific quest × segment × theme
+combination.
 """
 
 import hashlib
@@ -14,19 +14,23 @@ from pathlib import Path
 from app.llm.schemas import NotificationPrompt
 from app.models.journey import Chapter, Journey
 from app.models.user import UserJourneyState, UserProfile
-from app.notifications.schemas import NotificationTheme
+from app.notifications.schemas import (
+    EngagementSegment,
+    NotificationTheme,
+    QuestContext,
+    SEGMENT_DESCRIPTIONS,
+    SEGMENT_LABELS,
+)
 
 EXAMPLES_PATH = Path(__file__).resolve().parent.parent.parent / "templates" / "notification_examples.json"
 
+# ── Legacy: kept for existing code that imports STATE_DESCRIPTIONS ──
 STATE_DESCRIPTIONS: dict[str, str] = {
     "new_unstarted": "This is a brand new user who hasn't started yet. They need excitement and curiosity.",
     "onboarding": "This learner just started. They need gentle encouragement and quick wins.",
     "progressing_active": "This learner is actively engaged and making progress. Keep momentum going.",
     "progressing_slow": "This learner has slowed down. They need a gentle nudge without pressure.",
-    "struggling": (
-        "This learner is finding content difficult -- retrying tasks and scoring below average. "
-        "They need encouragement, not pressure."
-    ),
+    "struggling": "This learner is finding content difficult. They need encouragement, not pressure.",
     "bored_skimming": "This learner is breezing through too fast. They need a challenge or curiosity hook.",
     "chapter_transition": "This learner finished a chapter but hasn't started the next. Tease what's coming.",
     "dormant_short": "This learner has been inactive for 2+ days. Remind them what they're missing.",
@@ -35,6 +39,64 @@ STATE_DESCRIPTIONS: dict[str, str] = {
     "completing": "This learner is almost done! Celebrate progress and push for the finish line.",
     "completed": "This learner finished the journey. Appreciate and encourage sharing.",
 }
+
+
+THEME_MODIFIERS: dict[str, str] = {
+    "epic_meaning": (
+        "Make the learner feel part of something bigger. Connect learning to career transformation, "
+        "community impact, joining a movement. Use words: mission, movement, transform, belong, together. "
+        "Tone: inspirational, grand, purposeful."
+    ),
+    "accomplishment": (
+        "Celebrate progress and achievements. Reference specific milestones, streaks, scores, completions. "
+        "Use achievement language: unlocked, earned, mastered, crushed, nailed. "
+        "Tone: celebratory, proud, specific."
+    ),
+    "empowerment": (
+        "Give the learner choices and agency. Offer forks, customization, difficulty control. "
+        "Frame learning as CHOICE not obligation. Use words: choose, decide, your way, explore, unlock. "
+        "Tone: empowering, respectful of autonomy."
+    ),
+    "ownership": (
+        "Reference what the learner has accumulated — streaks, badges, vocabulary, chapters completed. "
+        "Use possession language: your collection, your progress, your streak, earned, built, saved. "
+        "Tone: protective, asset-focused, collector's pride."
+    ),
+    "social_influence": (
+        "Leverage community, peers, and competition. Show what others are doing, use social proof numbers. "
+        "Reference trending content, community favorites, peer counts. "
+        "Tone: social, competitive, community-driven. Never shame."
+    ),
+    "scarcity": (
+        "Create genuine urgency with time-limited content, expiring offers, exclusive access. "
+        "Use countdown language: expiring, last chance, closing soon, limited spots. "
+        "Tone: urgent, exclusive. NEVER fabricate fake scarcity."
+    ),
+    "unpredictability": (
+        "Spark curiosity with surprise rewards, mystery content, story cliffhangers, open loops. "
+        "Use ellipsis and questions to create information gaps. "
+        "Tone: mysterious, playful. Promise must be delivered on tap."
+    ),
+    "loss_avoidance": (
+        "Highlight what they'll lose if they don't act — streaks at risk, progress fading, "
+        "falling behind. Frame action as PROTECTION not obligation. "
+        "Tone: protective, warning, urgent-but-caring. Never threaten."
+    ),
+}
+
+# ── 10 World-Class Notification Patterns ──
+NOTIFICATION_PATTERNS: list[str] = [
+    "Cliffhanger — Leave an open loop the user MUST close. End with '...' or a question.",
+    "Milestone — Celebrate a specific, earned achievement with numbers.",
+    "Social Proof — Show that peers are doing what you want the user to do. Use real-feeling numbers.",
+    "Streak Protector — Trigger loss aversion around a built-up investment.",
+    "Personal Coach — Speak like a friend, not a brand. Warm, direct, empathetic.",
+    "Mystery Box — Promise a surprise reward for action. Use gift/mystery language.",
+    "Countdown — Create genuine time pressure with specific deadlines.",
+    "Progress Nudge — Show how close they are to a goal with percentages or counts.",
+    "Emotional Mirror — Reflect their journey back to them. Growth stats, monthly recap.",
+    "Character Hook — Use narrative characters as emotional anchors. Name the character.",
+]
 
 
 @dataclass
@@ -84,6 +146,22 @@ class StoryContext:
 
         return ctx
 
+    @classmethod
+    def from_quest_context(cls, qctx: QuestContext) -> "StoryContext":
+        """Build a StoryContext from a QuestContext (for bulk generation)."""
+        hook = random.choice(qctx.engagement_hooks) if qctx.engagement_hooks else ""
+        return cls(
+            chapter_name=qctx.chapter_name,
+            chapter_number=qctx.chapter_number,
+            total_chapters=qctx.total_chapters,
+            narrative_moment=qctx.narrative_moment,
+            emotional_context=qctx.emotional_context,
+            engagement_hook=hook,
+            character_name=qctx.character_name,
+            key_vocabulary=qctx.key_vocabulary,
+            chapter_progress=f"Chapter {qctx.chapter_number} of {qctx.total_chapters}",
+        )
+
     def to_placeholders(self) -> dict[str, str]:
         """Convert to a dict of placeholder keys for fallback template interpolation."""
         return {
@@ -98,28 +176,138 @@ class StoryContext:
             "story_placeholder": self.narrative_moment[:50] if self.narrative_moment else "aapki story continue ho rahi hai",
         }
 
-THEME_MODIFIERS: dict[str, str] = {
-    "epic_meaning": "Make the learner feel part of something bigger. Connect learning to a larger mission — career transformation, community impact, joining a movement of learners.",
-    "accomplishment": "Celebrate progress and achievements. Highlight milestones, streaks, completions, and scores. Make them feel proud of how far they've come.",
-    "empowerment": "Give the learner choices and creative control. Highlight paths, options, and strategies they can pick. Make them feel in charge of their learning.",
-    "ownership": "Reference what the learner has earned — coins, badges, progress, streaks. Remind them of their accumulated assets and investments in learning.",
-    "social_influence": "Leverage community, friends, and peers. Show what others are doing, invite competition, encourage sharing and group learning.",
-    "scarcity": "Create urgency and time pressure. Limited-time content, expiring offers, trial countdowns, or content that's available only now.",
-    "unpredictability": "Spark curiosity with surprise rewards, mystery content, random challenges, or unexpected story twists. Make them NEED to tap to find out.",
-    "loss_avoidance": "Highlight what they'll lose if they don't act — streaks at risk, progress fading, falling behind peers, or missed opportunities.",
-}
 
+class BulkPromptBuilder:
+    """Builds system prompts for bulk notification template generation.
 
-class NotificationPromptBuilder:
-    """Builds structured prompts for the notification LLM.
-
-    Assembles user state context, profile data, chapter analysis, and theme
-    instructions into a ``NotificationPrompt`` object. Also constructs the
-    system prompt with theme modifiers and few-shot examples.
+    Constructs the NotifCraft system prompt tailored to a specific
+    segment × theme × quest combination, requesting 8 template variations.
     """
 
     def __init__(self) -> None:
-        """Initialise the builder with an empty examples cache."""
+        self._examples: dict[str, list[dict]] | None = None
+
+    def build_bulk_system_prompt(
+        self,
+        segment: EngagementSegment,
+        theme: NotificationTheme,
+        quest_context: QuestContext,
+    ) -> str:
+        """Build the full system prompt for generating 8 templates.
+
+        Args:
+            segment: The engagement segment to target.
+            theme: The Octolysis theme to use.
+            quest_context: Rich quest/chapter context from the journey.
+
+        Returns:
+            Complete system prompt string for the LLM.
+        """
+        parts: list[str] = []
+
+        # Identity
+        parts.append(
+            "You are NotifCraft — an elite push notification copywriter for SpeakX, "
+            "an English learning app popular in India. You write in Hinglish — natural "
+            "Hindi-English code-switching as spoken in urban India.\n"
+        )
+
+        # Segment context
+        seg_label = SEGMENT_LABELS.get(segment.value, segment.value)
+        seg_desc = SEGMENT_DESCRIPTIONS.get(segment.value, "")
+        parts.append(f"TARGET SEGMENT: {seg_label}\n{seg_desc}\n")
+
+        # Theme instruction
+        modifier = THEME_MODIFIERS.get(theme.value, "")
+        parts.append(f"OCTOLYSIS THEME — {theme.value}:\n{modifier}\n")
+
+        # Quest/Story context
+        story = StoryContext.from_quest_context(quest_context)
+        parts.append("QUEST CONTEXT — make every notification specific to this quest:")
+        parts.append(f"- Quest: \"{quest_context.quest_title}\" (Quest {quest_context.quest_number})")
+        if story.chapter_progress:
+            parts.append(f"- Chapter: \"{story.chapter_name}\" ({story.chapter_progress})")
+        if story.narrative_moment:
+            parts.append(f"- Story moment: {story.narrative_moment}")
+        if story.emotional_context:
+            parts.append(f"- Emotional tone: {story.emotional_context}")
+        if story.engagement_hook:
+            parts.append(f"- Engagement hook: {story.engagement_hook}")
+        if story.character_name:
+            parts.append(f"- Key character: {story.character_name}")
+        if story.key_vocabulary:
+            parts.append(f"- Key vocabulary: {', '.join(story.key_vocabulary[:5])}")
+        parts.append("")
+
+        # Copy constraints
+        parts.append(
+            "COPY RULES:\n"
+            "- Title: Max 60 chars. Punchy. One idea. Max 1 emoji.\n"
+            "- Body: Max 120 chars. 1-2 lines. Hinglish. Specific to quest/chapter/character.\n"
+            "- CTA: Max 25 chars. Action verb. Describes what happens on tap.\n"
+            "- Image: Suggest an image keyword (e.g. quest_start, streak_fire, mystery_box, "
+            "social_proof, countdown, milestone, character_moment, progress_bar).\n"
+            "- NEVER write generic copy. Reference the quest, chapter, or character by name.\n"
+            "- Each of the 8 templates must use a DIFFERENT angle/pattern.\n"
+        )
+
+        # Patterns reference
+        parts.append("USE THESE 8+ PATTERNS (one per template, vary them):")
+        for i, pattern in enumerate(NOTIFICATION_PATTERNS[:8], 1):
+            parts.append(f"  {i}. {pattern}")
+        parts.append("")
+
+        # Few-shot examples
+        examples = self._load_examples().get(theme.value, [])
+        if examples:
+            parts.append("REFERENCE EXAMPLES (for tone, not to copy):")
+            for ex in examples[:3]:
+                parts.append(f'  - Title: "{ex["title"]}" | Body: "{ex["body"]}" | CTA: "{ex["cta"]}"')
+            parts.append("")
+
+        # Output format
+        parts.append(
+            "OUTPUT: Respond with ONLY a JSON array of exactly 8 objects. No markdown, no explanation.\n"
+            "Each object: {\"title\": \"...\", \"body\": \"...\", \"cta\": \"...\", \"image\": \"...\"}\n"
+        )
+
+        return "\n".join(parts)
+
+    def build_bulk_user_prompt(
+        self,
+        segment: EngagementSegment,
+        theme: NotificationTheme,
+        quest_context: QuestContext,
+    ) -> str:
+        """Build the user-message prompt for a bulk generation request."""
+        return (
+            f"Generate 8 unique Hinglish push notification templates for:\n"
+            f"- Segment: {SEGMENT_LABELS.get(segment.value, segment.value)}\n"
+            f"- Theme: {theme.value}\n"
+            f"- Quest: \"{quest_context.quest_title}\"\n"
+            f"- Chapter: \"{quest_context.chapter_name}\" "
+            f"(Chapter {quest_context.chapter_number} of {quest_context.total_chapters})\n\n"
+            f"Each template must use a different notification pattern. "
+            f"Return JSON array of 8 objects."
+        )
+
+    def _load_examples(self) -> dict[str, list[dict]]:
+        """Load and cache few-shot examples from the templates JSON file."""
+        if self._examples is not None:
+            return self._examples
+        try:
+            self._examples = json.loads(EXAMPLES_PATH.read_text())
+        except (FileNotFoundError, json.JSONDecodeError):
+            self._examples = {}
+        return self._examples
+
+
+# ── Legacy compatibility class ──
+
+class NotificationPromptBuilder:
+    """Legacy prompt builder for per-user notification generation."""
+
+    def __init__(self) -> None:
         self._examples: dict[str, list[dict]] | None = None
 
     def build_prompt(
@@ -131,22 +319,6 @@ class NotificationPromptBuilder:
         theme: NotificationTheme,
         slot: int,
     ) -> NotificationPrompt:
-        """Build the user-context prompt for the LLM.
-
-        Extracts rich story context from the chapter analysis and journey
-        summary, and structures it alongside user state and profile data.
-
-        Args:
-            user_state: The user's current journey state record.
-            user_profile: Optional user profile with demographic/learning info.
-            chapter: Optional current chapter with LLM analysis data.
-            journey: The journey the user is enrolled in.
-            theme: The chosen notification theme.
-            slot: The time-slot index (1-6) for the notification.
-
-        Returns:
-            A fully populated ``NotificationPrompt`` ready for LLM consumption.
-        """
         state_desc = STATE_DESCRIPTIONS.get(user_state.current_state, "Active learner.")
         story_ctx = StoryContext.extract(chapter, journey)
         self._last_story_context = story_ctx
@@ -183,18 +355,6 @@ class NotificationPromptBuilder:
         )
 
     def build_system_prompt(self, theme: NotificationTheme) -> str:
-        """Build the system-level prompt with theme instructions, story context, and examples.
-
-        Combines base copywriting instructions, theme-specific modifiers, rich
-        story context (chapter name, narrative moment, characters, emotional tone),
-        and up to three few-shot examples loaded from the templates file.
-
-        Args:
-            theme: The notification theme to tailor the system prompt for.
-
-        Returns:
-            The complete system prompt string.
-        """
         base = (
             "You are a notification copywriter for SpeakX, an English learning app popular in India. "
             "Write push notifications in Hinglish -- natural Hindi-English code-switching as spoken "
@@ -208,7 +368,7 @@ class NotificationPromptBuilder:
 
         story_ctx = getattr(self, "_last_story_context", None)
         if story_ctx and (story_ctx.chapter_name or story_ctx.narrative_moment):
-            base += "STORY CONTEXT — use this to make the notification specific to where the learner is:\n"
+            base += "STORY CONTEXT:\n"
             if story_ctx.chapter_progress:
                 base += f"- Progress: {story_ctx.chapter_progress}\n"
             if story_ctx.chapter_name:
@@ -223,8 +383,7 @@ class NotificationPromptBuilder:
                 base += f"- Key character: {story_ctx.character_name}\n"
             if story_ctx.key_vocabulary:
                 base += f"- Key vocabulary: {', '.join(story_ctx.key_vocabulary[:5])}\n"
-            base += "\nIMPORTANT: Reference the specific story, characters, or chapter content above. "
-            base += "Do NOT write generic notifications. Make it feel personal to THIS learner's story position.\n\n"
+            base += "\nIMPORTANT: Reference the specific story content above.\n\n"
 
         examples = self._load_examples().get(theme.value, [])
         if examples:
@@ -235,24 +394,10 @@ class NotificationPromptBuilder:
         return base
 
     def compute_prompt_hash(self, prompt: NotificationPrompt) -> str:
-        """Compute a SHA-256 hash of the serialised prompt for deduplication.
-
-        Args:
-            prompt: The notification prompt to hash.
-
-        Returns:
-            A hex-encoded SHA-256 digest string.
-        """
         serialized = prompt.model_dump_json(exclude_none=True)
         return hashlib.sha256(serialized.encode()).hexdigest()
 
     def _load_examples(self) -> dict[str, list[dict]]:
-        """Load and cache few-shot examples from the templates JSON file.
-
-        Returns:
-            A dict mapping theme names to lists of example dicts. Returns an
-            empty dict if the file is missing or contains invalid JSON.
-        """
         if self._examples is not None:
             return self._examples
         try:

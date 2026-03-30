@@ -1,197 +1,62 @@
 {
-  "new_unstarted|epic_meaning": [
-    {"title": "Lakho learners ne yahan se start kiya", "body": "Ab aapki baari! {chapter_name} se ek naye mission ka hissa bano.", "cta": "Join now"},
-    {"title": "Career transform hota hai yahan!", "body": "10 lakh+ professionals ne SpeakX se English seekhi. Aapki journey {chapter_name} se shuru hoti hai!", "cta": "Begin"},
-    {"title": "Something bigger awaits", "body": "Ye sirf app nahi -- ye ek community hai. {character_name} ke saath shuru karo!", "cta": "Start journey"}
+  "E_eq_0|epic_meaning": [
+    {"title": "Lakho learners ne yahan se start kiya", "body": "Ab teri baari! {chapter_name} se ek naye mission ka hissa ban.", "cta": "Join the mission"},
+    {"title": "Tera English journey yahan se shuru hota hai", "body": "Career transform karne wale 10L+ learners ki community mein aa.", "cta": "Start now"},
+    {"title": "Kuch bada hone wala hai", "body": "{character_name} ki story shuru ho rahi hai — aur tu uska part hai.", "cta": "Begin journey"}
   ],
-  "new_unstarted|unpredictability": [
-    {"title": "Ek surprise aapka wait kar raha hai!", "body": "{chapter_name} mein {character_name} se milo -- kuch unexpected hone wala hai!", "cta": "Discover karo"},
-    {"title": "Guess karo kya milega?", "body": "Pehli lesson complete karo aur mystery reward unlock karo! {engagement_hook}", "cta": "Start now"},
-    {"title": "Adventure begins!", "body": "{engagement_hook}", "cta": "Explore karo"}
+  "E_eq_0|unpredictability": [
+    {"title": "Ek surprise tere liye wait kar raha hai", "body": "{chapter_name} mein kuch unexpected hai — tap karke dekh.", "cta": "Open surprise"},
+    {"title": "Guess karo kya hoga {chapter_name} mein?", "body": "{character_name} ke saath ek adventure shuru hone wala hai...", "cta": "Find out"},
+    {"title": "Mystery quest unlocked", "body": "{quest_title} mein hidden challenge hai. Ready ho?", "cta": "Discover now"}
   ],
-  "onboarding|empowerment": [
-    {"title": "Aap decide karo!", "body": "{chapter_name} mein grammar se shuru karo ya conversation se -- aapki choice!", "cta": "Choose path"},
-    {"title": "Quick tip for you", "body": "Naye words ko sentences mein use karo -- {chapter_name} mein try karo!", "cta": "Try it"},
-    {"title": "Your learning style matters", "body": "Kaise seekhna hai wo aap decide karo. {character_name} guide karega!", "cta": "Customize"}
+  "E_eq_0|social_influence": [
+    {"title": "1,847 learners ne aaj start kiya", "body": "{chapter_name} sabse trending quest hai abhi. Tu bhi try kar?", "cta": "Join them"},
+    {"title": "Tera batch peeche nahi rehta", "body": "Sabne {quest_title} shuru kar diya — tu kab start karega?", "cta": "Catch up"},
+    {"title": "Community mein buzz hai", "body": "{character_name} ki story sabko pasand aa rahi hai. Check kar?", "cta": "See what's trending"}
   ],
-  "onboarding|accomplishment": [
-    {"title": "Pehla lesson done! Great start!", "body": "Bahut achha! {chapter_name} mein pehla step complete -- aapne kar liya!", "cta": "Next lesson"},
-    {"title": "First badge earned!", "body": "Aapne {chapter_name} mein apna pehla achievement unlock kar liya!", "cta": "Keep going"},
-    {"title": "3 activities complete!", "body": "{chapter_progress} -- shuru ho gayi journey! Consistency se results aayenge.", "cta": "Continue"}
+  "E_lt_40|empowerment": [
+    {"title": "Aaj kya seekhna hai? Tu decide kar", "body": "{chapter_name} mein multiple paths hain — tera pace, tera choice.", "cta": "Choose your path"},
+    {"title": "Easy ya challenging? Tere haath mein", "body": "{quest_title} ko apne level pe try kar. No pressure.", "cta": "Set difficulty"},
+    {"title": "Tera next step, teri choice", "body": "{chapter_name} mein {character_name} ke saath aage badh ya revision kar.", "cta": "Pick your path"}
   ],
-  "onboarding|unpredictability": [
-    {"title": "Kya hoga aage?", "body": "{chapter_name} mein {character_name} ke saath kuch interesting hone wala hai!", "cta": "Find out"},
-    {"title": "Surprise in your next lesson!", "body": "{engagement_hook}", "cta": "Open lesson"},
-    {"title": "Mystery challenge unlocked!", "body": "{chapter_name} mein ek hidden challenge hai. Dhundho!", "cta": "Try karo"}
+  "E_lt_40|accomplishment": [
+    {"title": "Pehla step complete — great start!", "body": "{quest_title} mein progress dikha raha hai. Keep going!", "cta": "Next lesson"},
+    {"title": "Chhota milestone, bada impact", "body": "{chapter_name} mein tune naye words seekhe. Har step counts.", "cta": "See progress"},
+    {"title": "Growing strong!", "body": "{chapter_progress} — tu sahi track pe hai. Aur thoda aage?", "cta": "Continue"}
   ],
-  "progressing_active|accomplishment": [
-    {"title": "Milestone in {chapter_name}!", "body": "Waah! {chapter_progress} -- aap consistently seekh rahe ho. Keep it up!", "cta": "Next goal"},
-    {"title": "Streak hero!", "body": "Roz seekhna -- that's the secret. {chapter_name} mein aap sahi raaste pe ho.", "cta": "Next lesson"},
-    {"title": "On fire!", "body": "{chapter_progress} complete! Ye momentum maintain karo!", "cta": "Keep going"}
+  "E_lt_40|unpredictability": [
+    {"title": "Surprise challenge in {quest_title}", "body": "{character_name} ne ek twist daal diya — handle kar payega?", "cta": "Try it"},
+    {"title": "Something new just dropped", "body": "{chapter_name} mein naya content aaya hai — pehle kisine nahi dekha.", "cta": "Explore now"},
+    {"title": "Random reward waiting!", "body": "{quest_title} complete karo aur mystery prize unlock karo.", "cta": "Claim reward"}
   ],
-  "progressing_active|ownership": [
-    {"title": "Aapka {chapter_name} progress report", "body": "Dekho kitna seekh liya hai. {chapter_progress} -- ye sab aapki mehnat ka result!", "cta": "View progress"},
-    {"title": "New badges in {chapter_name}!", "body": "Aapne naye badges earn kiye. Collection dekho!", "cta": "See badges"},
-    {"title": "Coins mil gaye!", "body": "{chapter_name} mein daily practice ka reward -- aapke coins badh gaye!", "cta": "Use coins"}
+  "E_lt_70|accomplishment": [
+    {"title": "{chapter_progress} complete — solid!", "body": "Tu consistently seekh raha hai. Bahut kam log itna aate hain.", "cta": "Keep it up"},
+    {"title": "New badge earned!", "body": "{chapter_name} mein 'Consistent Learner' badge mila. Proud moment.", "cta": "See badges"},
+    {"title": "Halfway mark cross kiya!", "body": "{quest_title} mein tera score top 20% mein hai. Well done!", "cta": "Next challenge"}
   ],
-  "progressing_active|unpredictability": [
-    {"title": "{chapter_name} mein naya twist!", "body": "{narrative_moment}", "cta": "Find out"},
-    {"title": "Surprise challenge from {character_name}!", "body": "{engagement_hook}", "cta": "Accept"},
-    {"title": "Mystery reward in {chapter_name}!", "body": "Aaj ki lesson mein kuch special hidden hai. {emotional_context}", "cta": "Discover"}
+  "E_lt_70|ownership": [
+    {"title": "Tera vocabulary vault bhar raha hai", "body": "{chapter_name} se naye words add hue teri collection mein.", "cta": "See your vault"},
+    {"title": "Progress saved — tera hai ye sab", "body": "{chapter_progress} ka progress tere account mein safe hai.", "cta": "View collection"},
+    {"title": "Tu build kar raha hai kuch khaas", "body": "{quest_title} ke baad teri skill profile aur strong hui.", "cta": "Check profile"}
   ],
-  "progressing_active|empowerment": [
-    {"title": "Aaj kya seekhoge {chapter_name} mein?", "body": "Multiple paths available hain. Aap decide karo kaunsa try karna hai!", "cta": "Choose path"},
-    {"title": "Pro tip for {chapter_name}", "body": "{engagement_hook}", "cta": "Learn more"},
-    {"title": "Your call!", "body": "{chapter_name} mein aapke paas choices hain. Kya karoge?", "cta": "Decide now"}
+  "E_lt_70|social_influence": [
+    {"title": "Tera rank: Top 30% learners mein", "body": "{chapter_name} mein 2,340 learners ke saath compete kar raha hai.", "cta": "See leaderboard"},
+    {"title": "Friends aage nikal rahe hain", "body": "{quest_title} pe sabka engagement badh raha hai. Tera turn.", "cta": "Catch up"},
+    {"title": "Community highlight", "body": "{chapter_name} ki story pe 4.5K reactions aaye hain. Join karo.", "cta": "See reactions"}
   ],
-  "progressing_slow|epic_meaning": [
-    {"title": "Har step matters!", "body": "{chapter_name} mein slow progress bhi progress hai. Aap bade mission pe ho.", "cta": "Continue"},
-    {"title": "Winners never quit", "body": "{chapter_progress} -- itna seekh liya hai. {character_name} bhi proud hoga!", "cta": "Keep going"},
-    {"title": "Small steps, big dreams", "body": "Roz 10 min ki practice se {chapter_name} complete hoga. Shuru karo!", "cta": "Shuru karo"}
+  "E_gte_70|accomplishment": [
+    {"title": "Power learner status unlocked!", "body": "{chapter_progress} done — tu top 5% mein hai. Legend.", "cta": "See your rank"},
+    {"title": "Another quest crushed!", "body": "{quest_title} mein perfect score. Aisi consistency rare hai.", "cta": "Next quest"},
+    {"title": "Tera growth insane hai", "body": "Is month {chapter_name} mein 50+ new concepts mastered.", "cta": "See your stats"}
   ],
-  "progressing_slow|empowerment": [
-    {"title": "Apni speed choose karo", "body": "{chapter_name} mein aapki pace, aapka style. No pressure!", "cta": "Continue"},
-    {"title": "Try a different approach?", "body": "{chapter_name} mein alternative path available hai. Switch karo!", "cta": "Explore options"},
-    {"title": "You're in control", "body": "{engagement_hook}", "cta": "Your choice"}
+  "E_gte_70|ownership": [
+    {"title": "Tera empire bada ho raha hai", "body": "Badges, vocabulary, streaks — sab kuch tera. Protect it.", "cta": "View collection"},
+    {"title": "Gold streak — guard it!", "body": "{quest_title} ke baad teri streak gold level pe hai.", "cta": "Keep streak alive"},
+    {"title": "Your learning portfolio", "body": "{chapter_progress} worth of skills teri profile mein saved.", "cta": "See portfolio"}
   ],
-  "progressing_slow|loss_avoidance": [
-    {"title": "{chapter_name} progress fade ho raha hai!", "body": "Bina practice ke {character_name} ke saath story bhulne lagogi. Quick revision!", "cta": "Revise now"},
-    {"title": "Don't lose your progress!", "body": "{chapter_progress} tak pahunche ho. Yahan se wapas mat jao!", "cta": "Continue"},
-    {"title": "Momentum mat kho!", "body": "{chapter_name} mein itna invest kiya -- ab chodna mat.", "cta": "Resume"}
-  ],
-  "struggling|epic_meaning": [
-    {"title": "Haar mat mano!", "body": "{chapter_name} mushkil hai but impossible nahi. Aap bade sapne ke liye seekh rahe ho!", "cta": "Try again"},
-    {"title": "It's okay to struggle", "body": "Mushkil matlab aap grow kar rahe ho. {character_name} bhi yahi kehta!", "cta": "Keep trying"},
-    {"title": "You've got this!", "body": "10 lakh+ logon ne {chapter_name} complete kiya. Aap bhi kar sakte ho!", "cta": "One more try"}
-  ],
-  "struggling|empowerment": [
-    {"title": "Struggling with {chapter_name}?", "body": "Difficult words ko chhote parts mein todo. {engagement_hook}", "cta": "Learn technique"},
-    {"title": "Aap choose karo approach!", "body": "{chapter_name} mein examples se ya practice se seekho? Both available!", "cta": "Pick your way"},
-    {"title": "Smart study tip", "body": "{chapter_name} mein agar kuch samajh na aaye -- {engagement_hook}", "cta": "See examples"}
-  ],
-  "struggling|accomplishment": [
-    {"title": "Effort matters in {chapter_name}!", "body": "Jo try karta hai wo seekhta hai. Aap try kar rahe ho -- that's great!", "cta": "Keep trying"},
-    {"title": "We see your effort!", "body": "{chapter_name} mushkil hai but aap practice kar rahe ho. Respect!", "cta": "Continue"},
-    {"title": "Brave learner!", "body": "{chapter_name} try karna brave hai. {character_name} bhi impressed hoga!", "cta": "Next task"}
-  ],
-  "struggling|unpredictability": [
-    {"title": "Surprise help in {chapter_name}!", "body": "{character_name} ne ek shortcut share kiya hai. Dekhoge?", "cta": "See hint"},
-    {"title": "Mystery bonus unlocked!", "body": "{chapter_name} mein struggle karne ka reward mil gaya -- surprise!", "cta": "Claim reward"},
-    {"title": "Something unexpected!", "body": "{engagement_hook}", "cta": "Find out"}
-  ],
-  "bored_skimming|empowerment": [
-    {"title": "Too easy? Level up in {chapter_name}!", "body": "Advanced challenges unlock karo. Aap decide karo kitna hard!", "cta": "Go advanced"},
-    {"title": "Boss level in {chapter_name}!", "body": "Basic done? Ab harder stuff try karo. {engagement_hook}", "cta": "Challenge me"},
-    {"title": "Customize your difficulty", "body": "{chapter_name} mein aap ready ho next level ke liye!", "cta": "Adjust level"}
-  ],
-  "bored_skimming|scarcity": [
-    {"title": "{chapter_name} advanced quiz expiring!", "body": "Ye special quiz sirf aaj available hai. Miss mat karo!", "cta": "Take quiz"},
-    {"title": "Advanced content in {chapter_name}!", "body": "Ye bonus module sirf 48 hours ke liye hai. {engagement_hook}", "cta": "Start now"},
-    {"title": "Last chance!", "body": "{chapter_name} mein ye bonus challenge kal tak hi hai.", "cta": "Do it now"}
-  ],
-  "bored_skimming|unpredictability": [
-    {"title": "Hidden challenge in {chapter_name}!", "body": "{character_name} ne ek secret task chhupaya hai. Find it!", "cta": "Search"},
-    {"title": "Random boss battle!", "body": "{chapter_name} mein unexpected challenge -- kya aap ready ho?", "cta": "Accept"},
-    {"title": "Mystery content unlocked!", "body": "{engagement_hook}", "cta": "Explore"}
-  ],
-  "bored_skimming|social_influence": [
-    {"title": "Top learners love {chapter_name}!", "body": "Leaderboard mein aapka naam hona chahiye. Compete karo!", "cta": "See rankings"},
-    {"title": "Friends ne {chapter_name} complete kiya", "body": "Aap se pehle finish kiya! Challenge accept karo?", "cta": "Catch up"},
-    {"title": "Community challenge!", "body": "{chapter_name} mein group competition shuru ho gaya. Join karo!", "cta": "Join now"}
-  ],
-  "chapter_transition|unpredictability": [
-    {"title": "Next chapter mein surprise!", "body": "{narrative_moment}", "cta": "Start next chapter"},
-    {"title": "Kya hoga aage? Guess karo!", "body": "{character_name} ke saath naya adventure. {engagement_hook}", "cta": "Find out"},
-    {"title": "Mystery awaits in {chapter_name}!", "body": "Naye chapter mein kuch unexpected hai. {emotional_context}", "cta": "Explore"}
-  ],
-  "chapter_transition|scarcity": [
-    {"title": "Next chapter unlock ho gaya!", "body": "{chapter_name} sirf limited time ke liye bonus content ke saath hai!", "cta": "Start now"},
-    {"title": "Don't wait too long!", "body": "{chapter_name} ready hai. Jitna late karoge utna mushkil hoga.", "cta": "Begin chapter"},
-    {"title": "Time-limited bonus!", "body": "Naye chapter mein start karo toh extra reward milega. {engagement_hook}", "cta": "Claim bonus"}
-  ],
-  "chapter_transition|accomplishment": [
-    {"title": "Chapter complete! What a journey!", "body": "{chapter_progress}! Aapne bohot achha kiya. Next adventure ready hai.", "cta": "Next chapter"},
-    {"title": "Achievement unlocked!", "body": "Ek aur chapter done! {character_name} ko bhi khushi hogi.", "cta": "Continue"},
-    {"title": "Proud moment!", "body": "{chapter_progress} -- har chapter ek naya milestone hai.", "cta": "Keep going"}
-  ],
-  "dormant_short|loss_avoidance": [
-    {"title": "Aapka streak khatre mein!", "body": "2 din se {chapter_name} mein practice nahi hui. Streak bachao!", "cta": "Save streak"},
-    {"title": "{chapter_name} progress fade ho raha hai!", "body": "Bina practice ke {character_name} ke saath story bhulne lagogi. Quick revision!", "cta": "Revise now"},
-    {"title": "Kahan gayab ho?", "body": "{chapter_name} mein aapki learning momentum tut rahi hai!", "cta": "Come back"}
-  ],
-  "dormant_short|scarcity": [
-    {"title": "Naya content in {chapter_name}!", "body": "Limited time ke liye special lessons unlock hain. {engagement_hook}", "cta": "Check it out"},
-    {"title": "Offer expiring!", "body": "{chapter_name} mein bonus sessions sirf 3 din ke liye available hain.", "cta": "Start now"},
-    {"title": "Time nikal raha hai!", "body": "{chapter_progress} pe ho. Jitna late karoge utna catch up mushkil.", "cta": "Return now"}
-  ],
-  "dormant_short|social_influence": [
-    {"title": "Aapke friends {chapter_name} mein aage!", "body": "3 log aapke batch se aage badh gaye. Join them!", "cta": "Catch up"},
-    {"title": "Community mein activity badhi!", "body": "{chapter_name} mein naye learners join ho rahe hain. Aap bhi active ho jao!", "cta": "Come back"},
-    {"title": "{character_name} puch raha hai...", "body": "Kahan ho tum? {chapter_name} mein sab aapka wait kar rahe hain.", "cta": "Return"}
-  ],
-  "dormant_short|unpredictability": [
-    {"title": "Surprise update in {chapter_name}!", "body": "Jab aap away the, {character_name} ne kuch naya discover kiya!", "cta": "See what"},
-    {"title": "Mystery waiting for you!", "body": "{chapter_name} mein kuch badal gaya hai. {engagement_hook}", "cta": "Find out"},
-    {"title": "You won't believe this!", "body": "{narrative_moment}", "cta": "Check it"}
-  ],
-  "dormant_long|loss_avoidance": [
-    {"title": "Bohot din ho gaye!", "body": "{chapter_name} mein jo seekha tha wo bhulne lag raha hai. Wapas aao!", "cta": "Come back"},
-    {"title": "We miss you!", "body": "{chapter_progress} tak pahunche the. Progress lose mat hone do!", "cta": "Return"},
-    {"title": "Streak gone, but not all!", "body": "{chapter_name} mein aapka progress saved hai. Wapas start karo!", "cta": "Rejoin"}
-  ],
-  "dormant_long|social_influence": [
-    {"title": "Aapke friends seekh rahe hain!", "body": "3 log aapke batch se {chapter_name} complete kar chuke. Join them!", "cta": "Catch up"},
-    {"title": "{character_name} misses you!", "body": "{chapter_name} mein aapke bina story adhoori hai.", "cta": "Come back"},
-    {"title": "Your friends miss you!", "body": "Learning group mein aapke bina {chapter_name} sab adhoora hai.", "cta": "Return"}
-  ],
-  "dormant_long|ownership": [
-    {"title": "Aapka progress abhi bhi saved hai!", "body": "{chapter_progress} tak pahunche the. Ye sab aapka hai -- wapas claim karo!", "cta": "Reclaim"},
-    {"title": "Aapke earned badges waiting!", "body": "{chapter_name} mein aapne jo earn kiya wo abhi bhi hai. Collect karo!", "cta": "View collection"},
-    {"title": "Your investment matters!", "body": "{chapter_name} mein itna invest kiya. Waste mat hone do!", "cta": "Resume"}
-  ],
-  "dormant_long|epic_meaning": [
-    {"title": "Aapki journey abhi khatam nahi hui!", "body": "{chapter_name} mein {character_name} ka saath abhi bhi hai. Bade sapne ke liye seekho!", "cta": "Rejoin mission"},
-    {"title": "Remember why you started?", "body": "Career transform karna tha na? {chapter_progress} tak aa chuke ho!", "cta": "Continue"},
-    {"title": "Your story isn't over!", "body": "{character_name} ke saath {chapter_name} mein bahut kuch baki hai.", "cta": "Come back"}
-  ],
-  "churned|scarcity": [
-    {"title": "Last chance: {chapter_name} progress!", "body": "Aapka saved progress jaldi expire ho jayega. Reactivate karo!", "cta": "Reactivate"},
-    {"title": "Special comeback offer!", "body": "Sirf aapke liye -- {chapter_name} mein bonus content unlock hai.", "cta": "Come back"},
-    {"title": "Ye opportunity miss mat karo", "body": "Naya content in {chapter_name} jo pehle nahi tha. {engagement_hook}", "cta": "Check it out"}
-  ],
-  "churned|loss_avoidance": [
-    {"title": "Aapki mehnat waste mat hone do", "body": "{chapter_progress} tak seekha tha. {character_name} ke saath story khatam karo!", "cta": "Revisit"},
-    {"title": "Unfinished business in {chapter_name}", "body": "{narrative_moment} -- story adhoori reh gayi!", "cta": "Continue"},
-    {"title": "Don't let it go!", "body": "{chapter_name} mein bahut invest kiya hai. One more try!", "cta": "Try again"}
-  ],
-  "churned|ownership": [
-    {"title": "Aapka collection waiting hai!", "body": "{chapter_name} mein earned badges, coins, progress -- sab saved hai.", "cta": "Reclaim"},
-    {"title": "Ye sab aapka hai!", "body": "{chapter_progress} ka progress, badges, vocabulary -- waste mat karo!", "cta": "Come back"},
-    {"title": "Your achievements need you!", "body": "{chapter_name} mein aapne jo banaya wo claim karo!", "cta": "Resume"}
-  ],
-  "completing|accomplishment": [
-    {"title": "Almost done with {chapter_name}!", "body": "Bas thoda aur! {chapter_progress} -- finish line ke paas ho!", "cta": "Finish strong"},
-    {"title": "Final stretch!", "body": "{character_name} ke saath itna seekh liya -- ab {chapter_name} complete karo!", "cta": "Complete now"},
-    {"title": "So close to finishing!", "body": "{chapter_progress}! Finish karo aur celebrate karo!", "cta": "Let's finish"}
-  ],
-  "completing|epic_meaning": [
-    {"title": "You're about to achieve something big!", "body": "{chapter_name} khatam karne wale ho. Bahut kam log yahan tak pahunchte hain!", "cta": "Finish it"},
-    {"title": "Champion in the making!", "body": "{chapter_progress} -- aap un special logon mein ho jo finish karte hain.", "cta": "Complete now"},
-    {"title": "History in the making!", "body": "{character_name} proud hai. {chapter_name} complete karo!", "cta": "Let's go"}
-  ],
-  "completing|loss_avoidance": [
-    {"title": "Itne paas aakar mat chodo!", "body": "{chapter_progress} -- bas last push chahiye. Chodoge toh sab waste!", "cta": "Finish now"},
-    {"title": "Don't lose this momentum!", "body": "{chapter_name} 90%+ done. Ab chhodni ka option nahi!", "cta": "Complete it"},
-    {"title": "So close to waste it!", "body": "{character_name} ke saath itni door aa chuke. Ab finish karo!", "cta": "Last push"}
-  ],
-  "completed|accomplishment": [
-    {"title": "Congratulations on {chapter_name}!", "body": "{chapter_progress} complete! {character_name} bhi celebrate kar raha hai!", "cta": "Celebrate"},
-    {"title": "Journey complete!", "body": "Kya achievement hai! {chapter_name} khatam -- aapki mehnat rang layi.", "cta": "Share karo"},
-    {"title": "Champion!", "body": "Poori journey finish -- {character_name} ke saath ek amazing safar tha!", "cta": "What's next?"}
-  ],
-  "completed|social_influence": [
-    {"title": "Inspire others with your {chapter_name} journey!", "body": "Aapne kar dikhaya! Friends ko bhi invite karo.", "cta": "Share achievement"},
-    {"title": "Join 10K+ completers!", "body": "Aap un special logon mein ho jinne {chapter_name} finish kiya.", "cta": "Celebrate"},
-    {"title": "Your success story matters", "body": "{character_name} ke saath aapki journey ek role model story hai!", "cta": "Tell your story"}
+  "E_gte_70|loss_avoidance": [
+    {"title": "Tera streak danger mein hai!", "body": "Sirf ek 5-min lesson se save ho jayega. Itna effort waste mat kar.", "cta": "Save my streak"},
+    {"title": "{chapter_name} ka progress fade ho raha", "body": "3 din aur skip kiya toh review se start karna padega.", "cta": "Continue now"},
+    {"title": "Don't let it slip", "body": "{quest_title} mein 87% complete tha — finish line pass hai.", "cta": "Finish it"}
   ]
 }

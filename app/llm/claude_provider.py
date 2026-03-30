@@ -108,6 +108,10 @@ class ClaudeProvider(LLMProvider):
         data = self._parse_response(raw, NotificationCopy)
         return data
 
+    async def generate_raw(self, system_prompt: str, user_prompt: str) -> str:
+        """Send raw prompts and return the text response (for bulk generation)."""
+        return await self._call_with_retry(system_prompt, user_prompt, max_tokens=4000)
+
     async def _call_with_retry(self, system: str, user: str, max_tokens: int) -> str:
         last_error: Exception | None = None
         for attempt in range(1, 4):

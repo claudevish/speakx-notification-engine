@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Segmentation Matrix - SpeakX Notifications{% endblock %}
-{% block page_title %}Segmentation Matrix{% endblock %}
+{% block title %}Segmentation — NotifCraft{% endblock %}
+{% block page_title %}Segment &times; Theme Strategy{% endblock %}
 
 {% block content %}
 {# ── Macro: theme pill with consistent color coding ── #}
@@ -27,71 +27,53 @@
   {% endif %}
 {% endmacro %}
 
-{# ── Macro: state colored dot ── #}
-{% macro state_dot(state) %}
-  {% if state in ('progressing_active', 'onboarding') %}
-    <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-  {% elif state in ('struggling', 'bored_skimming') %}
-    <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
-  {% elif state in ('dormant_short', 'dormant_long') %}
-    <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
-  {% elif state == 'churned' %}
-    <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
-  {% elif state in ('completed', 'completing') %}
-    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+{# ── Macro: segment color dot ── #}
+{% macro segment_dot(segment) %}
+  {% if segment == 'E_eq_0' %}
+    <span class="w-2.5 h-2.5 rounded-full bg-red-400 shrink-0"></span>
+  {% elif segment == 'E_lt_40' %}
+    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></span>
+  {% elif segment == 'E_lt_70' %}
+    <span class="w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0"></span>
+  {% elif segment == 'E_gte_70' %}
+    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
   {% else %}
-    <span class="w-2 h-2 rounded-full bg-zinc-500 shrink-0"></span>
+    <span class="w-2.5 h-2.5 rounded-full bg-zinc-400 shrink-0"></span>
   {% endif %}
 {% endmacro %}
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- Section 1: State x Theme Strategy Table                -->
+<!-- Section 1: Segment × Theme Strategy Table              -->
 <!-- ═══════════════════════════════════════════════════════ -->
 <div class="mb-8">
-  <h3 class="text-lg font-semibold text-zinc-100 mb-4">State &times; Theme Strategy</h3>
+  <h3 class="text-lg font-semibold text-zinc-100 mb-2">Engagement Segments</h3>
+  <p class="text-sm text-zinc-500 mb-4">4 segments based on engagement score. Each segment gets top 3 Octolysis themes (configurable per journey based on CTR analysis).</p>
 
   <div class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full">
         <thead>
           <tr class="border-b border-zinc-800">
-            <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">State</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Priority</th>
-            <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Max/Day</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Themes</th>
-            <th class="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Suppress</th>
-            <th class="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Users</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Segment</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Top 3 Themes</th>
           </tr>
         </thead>
         <tbody>
-          {% for entry in matrix %}
+          {% for entry in segment_matrix %}
           <tr x-data="{ expanded: false }" class="group">
-            <td colspan="6" class="p-0">
+            <td colspan="2" class="p-0">
               <div @click="expanded = !expanded" class="cursor-pointer border-t border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
                 <div class="flex items-center">
-                  <!-- State -->
-                  <div class="flex items-center gap-2.5 px-4 py-3 w-52 shrink-0">
-                    {{ state_dot(entry.state) }}
-                    <span class="font-medium text-sm text-zinc-200">{{ entry.state }}</span>
-                    <svg class="w-3 h-3 text-zinc-600 shrink-0 transition-transform" :class="expanded ? 'rotate-90' : ''" viewBox="0 0 20 20" fill="currentColor">
+                  <!-- Segment -->
+                  <div class="flex items-center gap-2.5 px-4 py-3 w-80 shrink-0">
+                    {{ segment_dot(entry.segment) }}
+                    <div>
+                      <span class="font-medium text-sm text-zinc-200">{{ entry.label }}</span>
+                      <span class="text-xs text-zinc-500 ml-2">({{ entry.segment }})</span>
+                    </div>
+                    <svg class="w-3 h-3 text-zinc-600 shrink-0 transition-transform ml-auto" :class="expanded ? 'rotate-90' : ''" viewBox="0 0 20 20" fill="currentColor">
                       <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/>
                     </svg>
-                  </div>
-
-                  <!-- Priority -->
-                  <div class="px-4 py-3 w-28 shrink-0">
-                    {% if entry.priority == 'high' %}
-                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400">high</span>
-                    {% elif entry.priority == 'medium' %}
-                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400">medium</span>
-                    {% else %}
-                      <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-500/10 text-zinc-400">low</span>
-                    {% endif %}
-                  </div>
-
-                  <!-- Max/Day -->
-                  <div class="px-4 py-3 w-24 shrink-0 text-center">
-                    <span class="text-sm font-medium text-zinc-300">{{ entry.max_daily }}</span>
                   </div>
 
                   <!-- Themes -->
@@ -102,30 +84,10 @@
                       {% endfor %}
                     </div>
                   </div>
-
-                  <!-- Suppress -->
-                  <div class="px-4 py-3 w-24 shrink-0 text-center">
-                    {% if entry.suppress_if_active %}
-                      <svg class="w-4 h-4 text-emerald-400 mx-auto" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
-                      </svg>
-                    {% else %}
-                      <span class="text-zinc-600">&mdash;</span>
-                    {% endif %}
-                  </div>
-
-                  <!-- Users -->
-                  <div class="px-4 py-3 w-24 shrink-0 text-right">
-                    {% if entry.user_count > 0 %}
-                      <span class="text-sm font-medium text-zinc-200">{{ entry.user_count }}</span>
-                    {% else %}
-                      <span class="text-sm text-zinc-600">0</span>
-                    {% endif %}
-                  </div>
                 </div>
               </div>
 
-              <!-- Expanded description row -->
+              <!-- Expanded description -->
               <div x-show="expanded" x-transition x-cloak class="px-4 pb-4 pt-1 bg-zinc-800/20">
                 <div class="ml-7 pl-4 border-l-2 border-zinc-700">
                   <p class="text-sm text-zinc-400 leading-relaxed">{{ entry.description }}</p>
@@ -141,68 +103,65 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- Section 2: Time Slot Preferences                       -->
+<!-- Section 2: Generation Formula                          -->
 <!-- ═══════════════════════════════════════════════════════ -->
 <div class="mb-8">
-  <h3 class="text-lg font-semibold text-zinc-100 mb-4">Time Slot Preferences</h3>
+  <h3 class="text-lg font-semibold text-zinc-100 mb-4">Bulk Generation Formula</h3>
 
-  {% set slot_labels = {1: '7 AM', 2: '12:30 PM', 3: '6 PM', 4: '7:30 PM', 5: '9 PM', 6: 'Event'} %}
-
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-    {% for slot_num in range(1, 7) %}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-sm font-semibold text-zinc-200">Slot {{ slot_num }}</span>
-        <span class="text-xs text-zinc-500">{{ slot_labels[slot_num] }}</span>
+  <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+    <div class="flex flex-wrap items-center gap-3 text-sm">
+      <div class="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">
+        <span class="text-red-400 font-medium">4 Segments</span>
       </div>
-      <div class="flex flex-col gap-1.5">
-        {% if slot_preferences.get(slot_num) %}
-          {% for theme in slot_preferences[slot_num] %}
-            {{ theme_pill(theme) }}
-          {% endfor %}
-        {% else %}
-          <span class="text-xs text-zinc-500 italic">Any available</span>
-        {% endif %}
+      <span class="text-zinc-600 font-bold text-lg">&times;</span>
+      <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-2">
+        <span class="text-blue-400 font-medium">N Quests</span>
+      </div>
+      <span class="text-zinc-600 font-bold text-lg">&times;</span>
+      <div class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-4 py-2">
+        <span class="text-violet-400 font-medium">3 Themes</span>
+      </div>
+      <span class="text-zinc-600 font-bold text-lg">&times;</span>
+      <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-4 py-2">
+        <span class="text-emerald-400 font-medium">8 Templates</span>
+      </div>
+      <span class="text-zinc-600 font-bold text-lg">=</span>
+      <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2">
+        <span class="text-amber-400 font-bold">96 &times; N rows</span>
       </div>
     </div>
-    {% endfor %}
+    <p class="text-xs text-zinc-500 mt-3">Example: 40 quests &times; 4 segments &times; 3 themes &times; 8 templates = 3,840 rows</p>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- Section 3: Theme Reference                             -->
+<!-- Section 3: Octolysis Theme Reference                   -->
 <!-- ═══════════════════════════════════════════════════════ -->
 <div class="mb-6">
-  <h3 class="text-lg font-semibold text-zinc-100 mb-4">Theme Reference</h3>
+  <h3 class="text-lg font-semibold text-zinc-100 mb-4">Octolysis 8 Core Drives</h3>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {% for theme, modifier in theme_modifiers.items() %}
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-      <div class="flex items-center justify-between mb-2">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    {% for theme, psychology in theme_psychology.items() %}
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+      <div class="mb-2">
         {{ theme_pill(theme) }}
-        {% if theme_counts.get(theme) %}
-          <span class="text-xs text-zinc-500">{{ theme_counts[theme] }} sent</span>
-        {% endif %}
       </div>
-      <p class="text-sm text-zinc-400 leading-relaxed mt-2">{{ modifier }}</p>
+      <p class="text-sm text-zinc-400 leading-relaxed">{{ psychology }}</p>
 
-      <!-- States that use this theme -->
-      {% set using_states = [] %}
-      {% for entry in matrix %}
+      <!-- Segments that use this theme by default -->
+      {% set using_segments = [] %}
+      {% for entry in segment_matrix %}
         {% if theme in entry.themes %}
-          {% if using_states.append(entry.state) %}{% endif %}
+          {% if using_segments.append(entry.label) %}{% endif %}
         {% endif %}
       {% endfor %}
 
-      {% if using_states|length > 0 %}
+      {% if using_segments|length > 0 %}
       <div class="mt-3 pt-3 border-t border-zinc-800/50">
-        <p class="text-xs text-zinc-600 mb-1.5">Used by states:</p>
+        <p class="text-xs text-zinc-600 mb-1">Default segments:</p>
         <div class="flex flex-wrap gap-1">
-          {% for state_name in using_states %}
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-zinc-800 text-zinc-400">
-              {{ state_dot(state_name) }}
-              {{ state_name }}
-            </span>
+          {% for seg_label in using_segments %}
+            <span class="inline-flex px-1.5 py-0.5 rounded text-xs bg-zinc-800 text-zinc-400">{{ seg_label }}</span>
           {% endfor %}
         </div>
       </div>

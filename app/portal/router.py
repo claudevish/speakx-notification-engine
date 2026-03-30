@@ -225,8 +225,9 @@ async def segmentation_page(
     db: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     _check_portal()
-    from app.notifications.prompt_builder import STATE_DESCRIPTIONS, THEME_MODIFIERS
-    from app.notifications.strategy import NotificationStrategyEngine
+    from app.notifications.prompt_builder import THEME_MODIFIERS
+    from app.notifications.schemas import SEGMENT_DESCRIPTIONS, SEGMENT_LABELS
+    from app.notifications.strategy import NotificationStrategyEngine, THEME_PSYCHOLOGY
 
     engine = NotificationStrategyEngine()
     all_journeys = await _get_all_journeys(db)
@@ -241,52 +242,25 @@ async def segmentation_page(
     elif all_journeys:
         selected_journey = all_journeys[0]
 
-    state_query = select(
-        UserJourneyState.current_state,
-        func.count(UserJourneyState.id),
-    ).group_by(UserJourneyState.current_state)
-    if selected_journey:
-        state_query = state_query.where(UserJourneyState.journey_id == selected_journey.id)
-    state_result = await db.execute(state_query)
-    state_counts = dict(state_result.all())
-
-    notif_theme_q = select(Notification.theme, func.count(Notification.id)).group_by(Notification.theme)
-    if selected_journey:
-        notif_theme_q = notif_theme_q.where(Notification.journey_id == selected_journey.id)
-    notif_theme_result = await db.execute(notif_theme_q)
-    theme_counts = dict(notif_theme_result.all())
-
-    matrix = []
-    state_order = [
-        "new_unstarted", "onboarding", "progressing_active", "progressing_slow",
-        "struggling", "bored_skimming", "chapter_transition",
-        "dormant_short", "dormant_long", "churned", "completing", "completed",
-    ]
-    for state in state_order:
-        strategy = engine.get_strategy(state)
-        matrix.append({
-            "state": state,
-            "description": STATE_DESCRIPTIONS.get(state, ""),
-            "priority": strategy.priority,
-            "max_daily": strategy.max_daily_for_state,
-            "suppress_if_active": strategy.suppress_if_active,
-            "themes": [t.value for t in strategy.applicable_themes],
-            "user_count": state_counts.get(state, 0),
+    # Build segment matrix
+    default_config = engine.get_default_config()
+    segment_matrix = []
+    for cfg in default_config:
+        segment_matrix.append({
+            "segment": cfg.segment.value,
+            "label": SEGMENT_LABELS.get(cfg.segment.value, cfg.segment.value),
+            "description": SEGMENT_DESCRIPTIONS.get(cfg.segment.value, ""),
+            "themes": [t.value for t in cfg.themes],
         })
-
-    slot_prefs: dict[int, list[str]] = {}
-    for slot_num, themes in engine.SLOT_THEME_PREFERENCES.items():
-        slot_prefs[slot_num] = [t.value for t in themes]
 
     return _render("segmentation.html", {
         "request": request,
         "page": "segmentation",
         "journeys": all_journeys,
         "selected_journey_id": str(selected_journey.id) if selected_journey else None,
-        "matrix": matrix,
-        "slot_preferences": slot_prefs,
+        "segment_matrix": segment_matrix,
         "theme_modifiers": THEME_MODIFIERS,
-        "theme_counts": theme_counts,
+        "theme_psychology": THEME_PSYCHOLOGY,
     })
 
 

@@ -24,6 +24,11 @@ class LLMProvider(ABC):
     async def generate_notification(self, prompt: NotificationPrompt) -> NotificationCopy:
         ...
 
+    @abstractmethod
+    async def generate_raw(self, system_prompt: str, user_prompt: str) -> str:
+        """Send a raw system+user prompt and return the raw text response."""
+        ...
+
 
 class LLMProviderError(Exception):
     pass

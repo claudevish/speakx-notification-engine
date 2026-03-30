@@ -159,6 +159,9 @@ class DemoLLMProvider(LLMProvider):
     ) -> NotificationCopy:
         raise LLMProviderError("Demo mode — LLM disabled")
 
+    async def generate_raw(self, system_prompt: str, user_prompt: str) -> str:
+        raise LLMProviderError("Demo mode — LLM disabled")
+
 
 DEMO_CHAPTER_ANALYSES: list[dict] = [
     {
