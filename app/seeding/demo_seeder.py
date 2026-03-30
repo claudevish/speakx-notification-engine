@@ -29,7 +29,7 @@ from app.models.notification import Notification
 from app.models.user import UserJourneyState
 from app.notifications.generator import NotificationGenerator
 from app.notifications.image_generator import generate_notification_image, save_notification_image
-from app.notifications.prompt_builder import NotificationPromptBuilder
+from app.notifications.prompt_builder import NotificationPromptBuilder, StoryContext
 from app.notifications.strategy import NotificationStrategyEngine
 
 logger = structlog.get_logger()
@@ -159,6 +159,73 @@ class DemoLLMProvider(LLMProvider):
     ) -> NotificationCopy:
         raise LLMProviderError("Demo mode — LLM disabled")
 
+    async def generate_raw(self, system_prompt: str, user_prompt: str) -> str:
+        raise LLMProviderError("Demo mode — LLM disabled")
+
+
+DEMO_CHAPTER_ANALYSES: list[dict] = [
+    {
+        "emotional_context": "Excitement and nervous energy as the learner enters a new workplace",
+        "difficulty_curve": "gradual",
+        "key_vocabulary": ["introduce", "colleague", "meeting", "schedule", "deadline"],
+        "narrative_moment": "Raj starts his first day at the new office, nervous but excited",
+        "segment_content": {"career_growth": "First impressions matter -- learn to introduce yourself confidently"},
+        "engagement_hooks": [
+            "Raj ko boss ke saamne introduce karna hai -- help karo!",
+            "Office mein pehla din -- kya impression padega?",
+            "Meeting mein English bolne ka dar? Raj ke saath seekho!",
+        ],
+    },
+    {
+        "emotional_context": "Growing confidence through daily workplace interactions",
+        "difficulty_curve": "moderate",
+        "key_vocabulary": ["presentation", "feedback", "collaborate", "stakeholder", "deliverable"],
+        "narrative_moment": "Raj has to give his first big presentation to the team",
+        "segment_content": {"career_growth": "Master workplace conversations that get you noticed"},
+        "engagement_hooks": [
+            "Raj ki presentation mein twist aaya -- kya hoga?",
+            "Boss ne feedback diya -- positive ya negative?",
+            "Team meeting mein Raj ne kuch aisa bola ki sab impressed!",
+        ],
+    },
+    {
+        "emotional_context": "Tension and high stakes as interview preparation intensifies",
+        "difficulty_curve": "challenging",
+        "key_vocabulary": ["negotiate", "salary", "strengths", "experience", "opportunity"],
+        "narrative_moment": "Priya calls Raj about a dream job opportunity but the interview is tomorrow",
+        "segment_content": {"career_growth": "Crack any interview with confident English"},
+        "engagement_hooks": [
+            "Dream job ka interview kal hai -- Raj ready hoga?",
+            "Priya ne secret interview tip share kiya!",
+            "Salary negotiation mein kya bolna hai? Raj seekh raha hai!",
+        ],
+    },
+    {
+        "emotional_context": "Warmth and connection through social English skills",
+        "difficulty_curve": "moderate",
+        "key_vocabulary": ["casual", "weekend", "hobby", "recommendation", "celebrate"],
+        "narrative_moment": "Raj is invited to his colleague's birthday party and needs to make small talk",
+        "segment_content": {"career_growth": "Build relationships that open career doors"},
+        "engagement_hooks": [
+            "Party mein small talk kaise karo? Raj seekh raha hai!",
+            "Colleague ne Raj ko weekend plan ke baare mein pucha!",
+            "Birthday party mein Raj ne ek joke sunaya -- reaction kaisa tha?",
+        ],
+    },
+    {
+        "emotional_context": "Pride and achievement as the journey reaches its climax",
+        "difficulty_curve": "advanced",
+        "key_vocabulary": ["leadership", "vision", "inspire", "strategy", "milestone"],
+        "narrative_moment": "Raj leads his first team meeting entirely in English and earns a promotion",
+        "segment_content": {"career_growth": "From learner to leader -- your transformation story"},
+        "engagement_hooks": [
+            "Raj ko promotion mil gayi! Kaise kiya usne?",
+            "Team meeting mein Raj ne sab ko inspire kiya!",
+            "Final chapter -- Raj ka transformation complete!",
+        ],
+    },
+]
+
 
 class DemoSeeder:
     """Seeds demo UserJourneyState records and generates fallback notifications.
@@ -243,6 +310,10 @@ class DemoSeeder:
                 users_created += 1
 
         await self.db.flush()
+
+        # Populate chapters with demo LLM analysis if missing
+        await self._seed_chapter_analyses(journey_id, chapters)
+
         logger.info("Demo users seeded", users_created=users_created, journey_id=str(journey_id))
         return {"users_created": users_created, "states_seeded": len(STATE_DISTRIBUTION)}
 
@@ -307,6 +378,7 @@ class DemoSeeder:
                 used_themes.append(theme)
 
                 chapter = await self._get_chapter(user_state.current_chapter_id)
+                story_context = StoryContext.extract(chapter, journey)
 
                 prompt = prompt_builder.build_prompt(
                     user_state, None, chapter, journey, theme, slot,
@@ -315,7 +387,7 @@ class DemoSeeder:
                 prompt_hash = prompt_builder.compute_prompt_hash(prompt)
 
                 generated = await generator.generate(
-                    prompt, system_prompt, theme, prompt_hash,
+                    prompt, system_prompt, theme, prompt_hash, story_context,
                 )
 
                 notification = Notification(
@@ -361,6 +433,35 @@ class DemoSeeder:
         return {"notifications_generated": notifications_created, "images_generated": images_created}
 
     # -- Helper methods --
+
+    async def _seed_chapter_analyses(
+        self, journey_id: uuid.UUID, chapters: list[Chapter],
+    ) -> None:
+        """Populate chapters with demo llm_analysis and journey with demo summary."""
+        journey = await self._get_journey(journey_id)
+        if journey and not journey.llm_journey_summary:
+            journey.llm_journey_summary = {
+                "summary": "An English learning journey following Raj's career transformation from nervous new employee to confident team leader.",
+                "emotional_arc": [
+                    "nervous excitement", "growing confidence",
+                    "high-stakes tension", "social warmth", "pride and achievement",
+                ],
+                "narrative_themes": ["career growth", "confidence building", "workplace communication", "friendship"],
+                "character_relationships": [
+                    {"character": "Raj", "role": "protagonist learner", "appears_in": ["all chapters"]},
+                    {"character": "Priya", "role": "supportive friend and mentor", "appears_in": ["Chapter 3", "Chapter 4"]},
+                    {"character": "Boss", "role": "authority figure", "appears_in": ["Chapter 1", "Chapter 2", "Chapter 5"]},
+                ],
+                "segment_signals": {"career_growth": "Career-focused professionals wanting workplace English"},
+                "difficulty_progression": "gradual increase from basic introductions to leadership communication",
+            }
+
+        for i, chapter in enumerate(chapters):
+            if not chapter.llm_analysis:
+                analysis_idx = i % len(DEMO_CHAPTER_ANALYSES)
+                chapter.llm_analysis = DEMO_CHAPTER_ANALYSES[analysis_idx]
+
+        await self.db.flush()
 
     async def _get_journey(self, journey_id: uuid.UUID) -> Optional[Journey]:
         result = await self.db.execute(

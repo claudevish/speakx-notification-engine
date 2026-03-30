@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +25,14 @@ from app.models.journey import (
 )
 from app.models.notification import Notification
 from app.models.user import UserJourneyState
+from app.notifications.schemas import (
+    BulkGenerationRequest,
+    EngagementSegment,
+    NotificationTheme,
+    QuestContext,
+    SEGMENT_DESCRIPTIONS,
+    SEGMENT_LABELS,
+)
 
 logger = structlog.get_logger()
 
@@ -219,41 +228,26 @@ async def segmentation_matrix(
     journey_id: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    from app.notifications.prompt_builder import STATE_DESCRIPTIONS, THEME_MODIFIERS
-    from app.notifications.strategy import NotificationStrategyEngine
+    from app.notifications.prompt_builder import THEME_MODIFIERS
+    from app.notifications.strategy import NotificationStrategyEngine, THEME_PSYCHOLOGY
 
     engine = NotificationStrategyEngine()
+    default_config = engine.get_default_config()
 
-    state_query = select(
-        UserJourneyState.current_state,
-        func.count(UserJourneyState.id),
-    ).group_by(UserJourneyState.current_state)
-    if journey_id:
-        state_query = state_query.where(UserJourneyState.journey_id == journey_id)
-
-    state_result = await db.execute(state_query)
-    state_counts = dict(state_result.all())
-
-    matrix = []
-    for state, strategy in engine.STATE_STRATEGIES.items():
-        matrix.append({
-            "state": state,
-            "description": STATE_DESCRIPTIONS.get(state, ""),
-            "priority": strategy.priority,
-            "max_daily": strategy.max_daily_for_state,
-            "suppress_if_active": strategy.suppress_if_active,
-            "themes": [t.value for t in strategy.applicable_themes],
-            "user_count": state_counts.get(state, 0),
+    # Build segment matrix
+    segment_matrix = []
+    for cfg in default_config:
+        segment_matrix.append({
+            "segment": cfg.segment.value,
+            "label": SEGMENT_LABELS.get(cfg.segment.value, cfg.segment.value),
+            "description": SEGMENT_DESCRIPTIONS.get(cfg.segment.value, ""),
+            "themes": [t.value for t in cfg.themes],
         })
 
-    slots: dict[str, list[str]] = {}
-    for slot_num, themes in engine.SLOT_THEME_PREFERENCES.items():
-        slots[str(slot_num)] = [t.value for t in themes]
-
     return {
-        "matrix": matrix,
-        "slot_preferences": slots,
+        "segment_matrix": segment_matrix,
         "theme_modifiers": THEME_MODIFIERS,
+        "theme_psychology": THEME_PSYCHOLOGY,
     }
 
 
@@ -389,91 +383,141 @@ async def seed_journey(
     return result
 
 
-class TriggerDay0Body(BaseModel):
-    identity: str
-    journey_id: str
-    payment_time: Optional[str] = None
+@portal_api_router.get("/segmentation/segments")
+async def segment_config() -> dict[str, Any]:
+    """Return the 4 segments with labels, descriptions, and default themes."""
+    from app.notifications.strategy import NotificationStrategyEngine, THEME_PSYCHOLOGY
+
+    engine = NotificationStrategyEngine()
+    default_config = engine.get_default_config()
+
+    segments = []
+    for cfg in default_config:
+        segments.append({
+            "segment": cfg.segment.value,
+            "label": SEGMENT_LABELS.get(cfg.segment.value, cfg.segment.value),
+            "description": SEGMENT_DESCRIPTIONS.get(cfg.segment.value, ""),
+            "default_themes": [t.value for t in cfg.themes],
+        })
+
+    all_themes = [
+        {"value": t.value, "psychology": THEME_PSYCHOLOGY.get(t.value, "")}
+        for t in NotificationTheme
+    ]
+
+    return {
+        "segments": segments,
+        "themes": all_themes,
+    }
 
 
-@portal_api_router.post("/trigger-day0")
-async def trigger_day0(body: TriggerDay0Body) -> dict[str, Any]:
-    """Manually trigger Day 0 notification scheduling for a user.
+@portal_api_router.post("/generate-bulk")
+async def generate_bulk_notifications(
+    body: BulkGenerationRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Generate bulk notification templates for a journey.
 
-    Calculates the Day 0 schedule based on payment time and queues
-    notifications for delivery via the pending-notification processor.
+    Process: For each segment × quest × theme → generate 8 templates.
     """
-    from workers.notification_worker import handle_payment_trigger
+    from app.config.manager import ConfigManager
+    from app.llm.claude_provider import ClaudeProvider
+    from app.config.settings import settings
+    from app.notifications.generator import BulkNotificationGenerator
 
-    payment_time = body.payment_time or datetime.utcnow().isoformat()
-    task = handle_payment_trigger.delay(
-        body.identity, body.journey_id, payment_time,
+    # Load journey with chapters and quests
+    result = await db.execute(
+        select(Journey)
+        .options(
+            selectinload(Journey.chapters)
+            .selectinload(Chapter.quests)
+        )
+        .where(Journey.id == body.journey_id)
     )
+    journey = result.scalar_one_or_none()
+    if not journey:
+        raise HTTPException(status_code=404, detail="Journey not found")
+
+    # Extract quest contexts from journey hierarchy
+    quest_contexts: list[QuestContext] = []
+    for chapter in sorted(journey.chapters, key=lambda c: c.chapter_number or 0):
+        analysis = chapter.llm_analysis or {}
+        for quest in sorted(chapter.quests, key=lambda q: q.quest_number or 0):
+            quest_contexts.append(QuestContext(
+                quest_id=f"{journey.name[:2].upper()}_C{chapter.chapter_number}_Q{quest.quest_number}",
+                quest_title=quest.name or f"Quest {quest.quest_number}",
+                quest_number=quest.quest_number or 0,
+                chapter_name=chapter.name or f"Chapter {chapter.chapter_number}",
+                chapter_number=chapter.chapter_number or 0,
+                total_chapters=journey.total_chapters or 0,
+                narrative_moment=analysis.get("narrative_moment", ""),
+                emotional_context=analysis.get("emotional_context", ""),
+                engagement_hooks=analysis.get("engagement_hooks", []),
+                character_name="",
+                key_vocabulary=analysis.get("key_vocabulary", []),
+            ))
+
+    # Extract character name from journey summary
+    summary = journey.llm_journey_summary or {}
+    characters = summary.get("character_relationships", [])
+    char_name = characters[0].get("character", "") if characters else ""
+    for qctx in quest_contexts:
+        qctx.character_name = char_name
+
+    # Build segments list
+    segments = [EngagementSegment(s) for s in body.segments]
+
+    # Initialize generator
+    config_manager = ConfigManager(db)
+    llm = ClaudeProvider(
+        api_key=settings.anthropic_api_key,
+        model=settings.llm_model,
+    )
+    generator = BulkNotificationGenerator(llm, config_manager)
+
+    # Generate all templates
+    gen_result = await generator.generate_bulk(
+        journey_id=str(journey.id),
+        segments=segments,
+        theme_config=body.theme_config,
+        quest_contexts=quest_contexts,
+    )
+
     return {
-        "task_id": task.id,
-        "status": "queued",
-        "identity": body.identity,
-        "payment_time": payment_time,
+        "journey_id": gen_result.journey_id,
+        "journey_name": journey.name,
+        "total_rows": gen_result.total_rows,
+        "segments_processed": gen_result.segments_processed,
+        "quests_processed": gen_result.quests_processed,
+        "rows": [row.model_dump() for row in gen_result.rows],
     }
 
 
-@portal_api_router.get("/send-history")
-async def send_history(
-    status: Optional[str] = Query(None),
-    journey_id: Optional[str] = Query(None),
-    page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100),
+@portal_api_router.post("/generate-bulk/csv")
+async def generate_bulk_csv(
+    body: BulkGenerationRequest,
     db: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
-    """Get paginated list of delivered/failed notifications (send history)."""
-    query = select(Notification).where(
-        Notification.delivery_status.in_(["sent", "failed", "skipped_dnd"]),
+) -> Response:
+    """Generate bulk notifications and return as downloadable CSV."""
+    # Reuse the bulk generation logic
+    result = await generate_bulk_notifications(body, db)
+
+    from app.notifications.generator import rows_to_csv
+    from app.notifications.schemas import BulkNotificationRow
+
+    rows = [BulkNotificationRow(**r) for r in result["rows"]]
+    csv_content = rows_to_csv(rows)
+
+    journey_name = result.get("journey_name", "journey")
+    safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in journey_name)
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_name}_notifications.csv"',
+        },
     )
-    if status:
-        query = select(Notification).where(Notification.delivery_status == status)
-    if journey_id:
-        query = query.where(Notification.journey_id == journey_id)
-
-    count_q = select(func.count()).select_from(query.subquery())
-    total = (await db.execute(count_q)).scalar() or 0
-
-    query = (
-        query.order_by(Notification.sent_at.desc().nullslast())
-        .offset((page - 1) * limit)
-        .limit(limit)
-    )
-    result = await db.execute(query)
-    notifications = result.scalars().all()
-
-    return {
-        "items": [_serialize_notification(n) for n in notifications],
-        "total": total,
-        "page": page,
-        "pages": max(1, (total + limit - 1) // limit),
-    }
-
-
-@portal_api_router.get("/delivery-stats")
-async def delivery_stats(
-    journey_id: Optional[str] = Query(None),
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
-    """Get delivery status counts (sent, failed, skipped_dnd, pending)."""
-    base = select(Notification.delivery_status, func.count(Notification.id)).group_by(
-        Notification.delivery_status,
-    )
-    if journey_id:
-        base = base.where(Notification.journey_id == journey_id)
-
-    result = await db.execute(base)
-    by_status = dict(result.all())
-
-    return {
-        "by_status": by_status,
-        "total_sent": by_status.get("sent", 0),
-        "total_failed": by_status.get("failed", 0),
-        "total_pending": by_status.get("pending", 0),
-        "total_skipped_dnd": by_status.get("skipped_dnd", 0),
-    }
 
 
 def _serialize_notification(n: Notification) -> dict[str, Any]:
@@ -489,8 +533,6 @@ def _serialize_notification(n: Notification) -> dict[str, Any]:
         "method": n.generation_method,
         "mode": n.mode,
         "delivery_status": n.delivery_status,
-        "scheduled_for": n.scheduled_for.isoformat() if n.scheduled_for else None,
-        "sent_at": n.sent_at.isoformat() if n.sent_at else None,
         "image_url": f"/static/generated/{n.image_path}" if n.image_path else None,
         "created_at": n.created_at.isoformat() if n.created_at else None,
     }

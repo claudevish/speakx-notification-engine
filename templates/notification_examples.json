@@ -1,77 +1,42 @@
 {
-  "click_bait": [
-    {"title": "Ye secret trick seekh lo!", "body": "Ek aisi cheez jo aapki English ko next level le jaayegi. Guess karo kya hai?", "cta": "Abhi dekho"},
-    {"title": "Aapne ye miss kar diya!", "body": "Chapter 3 mein ek twist hai jo sabko shock kar raha hai.", "cta": "Abhi padho"},
-    {"title": "Kya aap ye jaante the?", "body": "Ye English phrase aapki life change kar sakta hai. Seriously.", "cta": "Discover karo"}
+  "epic_meaning": [
+    {"title": "10 lakh+ learners ke saath seekho!", "body": "Workplace Conversations mein tu ek bade movement ka hissa hai.", "cta": "Join the mission"},
+    {"title": "English se career transform karo", "body": "Chapter 3 of 8 — ye sirf language nahi, ye life change hai!", "cta": "Continue learning"},
+    {"title": "Raj ke saath India ki sabse badi community!", "body": "Har din hazaaron log Interview Prep mein practice karte hain.", "cta": "Explore karo"}
   ],
-  "fomo": [
-    {"title": "Sab aage badh rahe hain!", "body": "Aapke saathi Chapter 4 mein pahunch gaye. Aap kab aa rahe ho?", "cta": "Catch up karo"},
-    {"title": "Aaj 5000+ learners ne practice ki", "body": "Miss mat karo -- daily practice se results milte hain.", "cta": "Join karo"},
-    {"title": "Time nikal raha hai!", "body": "Aapka streak tutne wala hai. Bas 5 min lagenge!", "cta": "Save your streak"}
+  "accomplishment": [
+    {"title": "Workplace Conversations milestone!", "body": "Waah! Chapter 3 of 8 mein consistently seekh raha hai. Keep it up!", "cta": "Next lesson"},
+    {"title": "3 chapters done — unstoppable!", "body": "Interview Prep mein 87% score. Bahut kam log itna jaldi reach karte.", "cta": "Keep the streak"},
+    {"title": "New badge: Confident Speaker!", "body": "Workplace Conversations complete — badge earned. Ab next level.", "cta": "See badges"}
   ],
-  "motivational": [
-    {"title": "You're doing amazing!", "body": "Har chhota step count karta hai. Aaj bhi thoda practice karo.", "cta": "Let's go!"},
-    {"title": "Winners never quit", "body": "Aapne itna seekh liya hai -- ab rukna mat. Keep going!", "cta": "Continue karo"},
-    {"title": "Small steps, big dreams", "body": "Roz 10 min ki practice se English fluent hoti hai. Start karo!", "cta": "Shuru karo"}
+  "empowerment": [
+    {"title": "Aaj kya seekhna hai? Tu decide kar", "body": "Interview Prep ya Small Talk — dono ready. Tera choice.", "cta": "Choose your path"},
+    {"title": "Easy mode ya challenge mode?", "body": "Workplace Conversations ko apne pace se kar. No rush.", "cta": "Set difficulty"},
+    {"title": "Multiple paths, tera decision", "body": "Chapter 3 mein Raj ke saath aage badh ya revision kar.", "cta": "Pick your path"}
   ],
-  "relationship": [
-    {"title": "Raj aapka wait kar raha hai!", "body": "Story mein Raj ko aapki help chahiye. Kya aap ready ho?", "cta": "Help Raj"},
-    {"title": "Priya ne kuch naya seekha", "body": "Aapki friend Priya ne ek interesting word seekha. Aap bhi seekho!", "cta": "Dekho kya"},
-    {"title": "Team meeting mein drama!", "body": "Office mein kuch hua hai. Raj ko advice chahiye.", "cta": "Story continue karo"}
+  "ownership": [
+    {"title": "Tera vocabulary vault: 247 words!", "body": "Interview Prep se 38 new words add hue. Collection growing.", "cta": "See your vault"},
+    {"title": "12-day streak saved hai", "body": "Ek aur din add kar — Gold Streak unlock hoga. Tune earn kiya.", "cta": "Protect your streak"},
+    {"title": "Tera learning portfolio", "body": "Chapter 3 of 8 worth of skills profile mein saved hain.", "cta": "View portfolio"}
   ],
-  "appreciation": [
-    {"title": "Waah, kya baat hai!", "body": "Aapne 10 activities complete kar li. Proud of you!", "cta": "Celebrate karo"},
-    {"title": "Star performer!", "body": "Aap top 10% learners mein ho. Amazing work!", "cta": "Keep shining"},
-    {"title": "Thank you for learning!", "body": "Aapki dedication inspiring hai. Seekhte raho!", "cta": "Next lesson"}
+  "social_influence": [
+    {"title": "Tera batch aage nikal gaya!", "body": "236 learners ne Interview Prep complete kiya is week.", "cta": "Catch up"},
+    {"title": "Trending: Workplace Conversations", "body": "Is week ka most popular chapter — 5.2K learners active.", "cta": "Join them"},
+    {"title": "Raj ne interview crack kiya", "body": "Community mein 4.8K celebrations. Tu bhi dekh?", "cta": "See the moment"}
   ],
-  "wotd": [
-    {"title": "Word of the Day: Resilient", "body": "Meaning: jo mushkilon se haar na maane. Like you!", "cta": "Use it today"},
-    {"title": "Aaj ka word: Serendipity", "body": "Jab achhi cheezein unexpectedly mil jaayein. Learn more!", "cta": "Practice karo"},
-    {"title": "English Tip: 'Nevertheless'", "body": "Phir bhi -- use this word to sound super professional.", "cta": "Try it now"}
+  "scarcity": [
+    {"title": "Interview Prep bonus — 48 hrs left!", "body": "Chapter 3 ka special content sirf limited time ke liye open.", "cta": "Start before it locks"},
+    {"title": "Early access expire ho raha hai", "body": "Workplace Conversations ka new section kal lock hoga.", "cta": "Open now"},
+    {"title": "Flash challenge: sirf aaj!", "body": "Interview Prep mein special quiz — midnight tak available.", "cta": "Take the quiz"}
   ],
-  "challenge": [
-    {"title": "Quick Challenge!", "body": "'Break a leg' ka matlab kya hai? A) Good luck B) Be careful", "cta": "Answer do"},
-    {"title": "Can you beat this?", "body": "Top learners ne ye quiz 2 min mein solve kiya. Aap?", "cta": "Challenge accept"},
-    {"title": "5-minute challenge", "body": "Kya aap 5 sentences bana sakte ho 'although' use karke?", "cta": "Try karo"}
+  "unpredictability": [
+    {"title": "Raj ne boss ko kuch aisa kaha...", "body": "Chapter 2 mein unexpected twist — promotion milegi?", "cta": "Find out"},
+    {"title": "Mystery challenge unlocked!", "body": "Interview Prep mein hidden bonus round hai. Discover kar.", "cta": "Open surprise"},
+    {"title": "Surprise reward tere liye!", "body": "Workplace Conversations complete karo — kya milega?", "cta": "Claim reward"}
   ],
-  "story_teaser": [
-    {"title": "Aage kya hoga?", "body": "Raj ki presentation mein kuch unexpected hua. Find out!", "cta": "Story padho"},
-    {"title": "Plot twist alert!", "body": "Chapter 4 mein ek surprise hai jo aap expect nahi kar rahe.", "cta": "Continue reading"},
-    {"title": "New chapter unlocked!", "body": "Raj aur Priya ki journey mein naya mod. Kya hoga aage?", "cta": "Explore karo"}
-  ],
-  "milestone": [
-    {"title": "50 activities done!", "body": "Half century! Aapne 50 activities complete kar li. What a journey!", "cta": "Next milestone"},
-    {"title": "Chapter 3 complete!", "body": "Bohot badhiya! Ek aur chapter successfully finish.", "cta": "Start Chapter 4"},
-    {"title": "7-day streak!", "body": "Ek hafte se daily practice. Consistency is key!", "cta": "Keep it going"}
-  ],
-  "tip": [
-    {"title": "Pro English Tip", "body": "Interview mein 'I think' ki jagah 'I believe' use karo. Sounds confident!", "cta": "More tips"},
-    {"title": "Ye galti mat karna!", "body": "Most Indians confuse 'lose' and 'loose'. Learn the difference.", "cta": "Learn now"},
-    {"title": "Quick Grammar Fix", "body": "'Myself Raj' nahi bolte -- 'I am Raj' bolte hain. Simple!", "cta": "Practice karo"}
-  ],
-  "streak": [
-    {"title": "Streak alive!", "body": "Aapka 5-day streak chal raha hai. Aaj bhi continue karo!", "cta": "Maintain streak"},
-    {"title": "Don't break it!", "body": "Aapka streak tutne wala hai. Bas 5 min practice karo.", "cta": "Quick practice"},
-    {"title": "Streak master!", "body": "10 din se daily learner! Aap rockstar ho.", "cta": "Keep rocking"}
-  ],
-  "quiz": [
-    {"title": "Quick Quiz Time!", "body": "Translate: 'Mujhe coffee chahiye' = ?", "cta": "Answer karo"},
-    {"title": "Test your English!", "body": "'Piece of cake' means A) Easy B) Bakery item?", "cta": "Guess karo"},
-    {"title": "Kya aap jaante ho?", "body": "'Spill the beans' ka matlab hai raaz batana. True or false?", "cta": "Check answer"}
-  ],
-  "recap": [
-    {"title": "Your learning recap", "body": "Is hafte aapne 15 new words seekhe aur 8 activities complete kiye!", "cta": "See details"},
-    {"title": "Yaad hai kya seekha?", "body": "Last week: meetings, presentations, aur email writing. Revise karo!", "cta": "Quick revision"},
-    {"title": "Journey so far", "body": "3 chapters done, 45 activities complete. Bohot achha progress!", "cta": "Continue journey"}
-  ],
-  "social_proof": [
-    {"title": "Join 10K+ learners!", "body": "Hazaaron log daily SpeakX pe English improve kar rahe hain.", "cta": "You too!"},
-    {"title": "Trending now!", "body": "Chapter 3 sabse popular hai. Everyone's talking about it!", "cta": "See why"},
-    {"title": "Community mein aao!", "body": "Aapke jaise 5000+ professionals daily practice karte hain.", "cta": "Join them"}
-  ],
-  "humor": [
-    {"title": "English is phunny!", "body": "'I before E except after C' -- English rules be like mood swings!", "cta": "Haha, more!"},
-    {"title": "Relatable?", "body": "When you say 'I'm fine' but actually you forgot the English word.", "cta": "LOL & Learn"},
-    {"title": "Grammar joke!", "body": "Past, present, future walked into a bar. It was tense!", "cta": "Learn tenses"}
+  "loss_avoidance": [
+    {"title": "15-day streak danger mein hai!", "body": "Sirf 5 min ka lesson — streak save kar le.", "cta": "Save my streak"},
+    {"title": "Chapter 3 ka progress fade ho raha", "body": "Interview Prep 67% complete tha — continue kar.", "cta": "Continue now"},
+    {"title": "Don't lose what you built", "body": "247 words, 3 chapters — itna effort waste mat hone de.", "cta": "Keep going"}
   ]
 }
