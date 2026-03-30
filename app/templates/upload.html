@@ -273,20 +273,29 @@ function uploadManager() {
     },
 
     startPolling() {
+      this.pollCount = 0;
       this.pollInterval = setInterval(async () => {
+        this.pollCount++;
         try {
           const res = await Portal.get(`/upload/status/${this.taskId}`);
           this.status = res.status;
-          if (res.result) {
+          if (res.status === 'SUCCESS' && res.result) {
             this.result = res.result;
             clearInterval(this.pollInterval);
-          }
-          if (res.status === 'FAILURE') {
+          } else if (res.status === 'FAILURE') {
             this.error = res.error || 'Ingestion failed';
+            clearInterval(this.pollInterval);
+          } else if (res.status === 'UNKNOWN') {
+            this.error = 'Task not found — worker may not be running';
             clearInterval(this.pollInterval);
           }
         } catch (e) {
           this.error = e.message;
+          clearInterval(this.pollInterval);
+        }
+        // Safety timeout after 10 minutes
+        if (this.pollCount > 300) {
+          this.error = 'Ingestion timed out after 10 minutes';
           clearInterval(this.pollInterval);
         }
       }, 2000);

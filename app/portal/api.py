@@ -1,6 +1,5 @@
 """Portal JSON API routes — serves data for Alpine.js fetch calls."""
 
-import base64
 import uuid as uuid_mod
 from datetime import datetime, timedelta
 from typing import Any, Optional
@@ -111,26 +110,19 @@ async def upload_csv(file: UploadFile) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Only CSV files accepted")
 
     content = await file.read()
-    content_b64 = base64.b64encode(content).decode("utf-8")
 
-    from workers.ingestion_worker import ingest_journey_task
-    task = ingest_journey_task.delay(content_b64, file.filename)
+    # Use in-process background runner (works without Celery workers)
+    from app.portal.background import launch_ingestion_task
 
-    return {"task_id": task.id, "status": "queued", "filename": file.filename}
+    task_id = launch_ingestion_task(content, file.filename)
+    return {"task_id": task_id, "status": "queued", "filename": file.filename}
 
 
 @portal_api_router.get("/upload/status/{task_id}")
 async def upload_status(task_id: str) -> dict[str, Any]:
-    from workers.celery_app import celery_app
-    result = celery_app.AsyncResult(task_id)
+    from app.portal.background import get_task_status
 
-    response: dict[str, Any] = {"task_id": task_id, "status": result.status}
-    if result.ready():
-        if result.successful():
-            response["result"] = result.result
-        else:
-            response["error"] = str(result.result)
-    return response
+    return get_task_status(task_id)
 
 
 @portal_api_router.get("/journeys")
@@ -471,7 +463,6 @@ async def generate_bulk_notifications(
     config_manager = ConfigManager(db)
     llm = ClaudeProvider(
         api_key=settings.anthropic_api_key,
-        model=settings.llm_model,
     )
     generator = BulkNotificationGenerator(llm, config_manager)
 
